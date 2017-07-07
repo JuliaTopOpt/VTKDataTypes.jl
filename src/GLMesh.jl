@@ -23,7 +23,7 @@ end
 function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1, opacity::Float64=1.)
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 
-    cell_register = Dict{Vector{Int}, Face{3,UInt32,-1}}()
+    cell_register = Dict{Vector{Int}, GLTriangle}()
     for i in 1:length(dataset.cell_connectivity)
         _cells = triangulate_cell_glmesh(dataset.cell_connectivity[i], dataset.cell_types[i])
         for j in 1:length(_cells)
@@ -36,7 +36,7 @@ function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1
 
     ncells = length(cell_register)
     cell_data = Dict{String, Array{Float64}}()
-    faces = Face{3,UInt32,-1}[]
+    faces = GLTriangle[]
 
     for (i, kv) in enumerate(cell_register)
         k, v = kv
@@ -82,7 +82,7 @@ end
 function GLMesh(dataset::VTKPolyData; color::String="", component::Int=1, opacity::Float64=1.)
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 
-    faces = Face{3,UInt32,-1}[]
+    faces = GLTriangle[]
     for i in 1:length(dataset.cell_connectivity)
         append!(faces, triangulate_cell_glmesh(dataset.cell_connectivity[i], dataset.cell_types[i]))
     end
@@ -180,40 +180,40 @@ end
 
 function decompose_to_glmesh_2d(dataset::VTKStructuredData)
     cextents = cell_extents(dataset)
-    faces = Face{3,UInt32,-1}[]
+    faces = GLTriangle[]
     for cind in product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
-        push!(faces, Face{3,UInt32,-1}(quad_cc[1]-1, quad_cc[2]-1, quad_cc[3]-1))
-        push!(faces, Face{4,UInt32,-1}(quad_cc[1]-1, quad_cc[3]-1, quad_cc[4]-1))
+        push!(faces, GLTriangle(quad_cc[1], quad_cc[2], quad_cc[3]))
+        push!(faces, GLTriangle(quad_cc[1], quad_cc[3], quad_cc[4]))
     end
     return faces
 end
 
 function decompose_to_glmesh_3d(dataset::VTKStructuredData)
     cextents = cell_extents(dataset)
-    faces = Face{3,UInt32,-1}[]
+    faces = GLTriangle[]
     for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
-        push!(faces, Face{3,UInt32,-1}(hexa_cc[1]-1, hexa_cc[2]-1, hexa_cc[3]-1))
-        push!(faces, Face{3,UInt32,-1}(hexa_cc[1]-1, hexa_cc[3]-1, hexa_cc[4]-1))
+        push!(faces, GLTriangle(hexa_cc[1], hexa_cc[2], hexa_cc[3]))
+        push!(faces, GLTriangle(hexa_cc[1], hexa_cc[3], hexa_cc[4]))
 
-        push!(faces, Face{3,UInt32,-1}(hexa_cc[1]-1, hexa_cc[2]-1, hexa_cc[6]-1))
-        push!(faces, Face{3,UInt32,-1}(hexa_cc[1]-1, hexa_cc[6]-1, hexa_cc[5]-1))
+        push!(faces, GLTriangle(hexa_cc[1], hexa_cc[2], hexa_cc[6]))
+        push!(faces, GLTriangle(hexa_cc[1], hexa_cc[6], hexa_cc[5]))
 
-        push!(faces, Face{3,UInt32,-1}(hexa_cc[4]-1, hexa_cc[1]-1, hexa_cc[5]-1))
-        push!(faces, Face{3,UInt32,-1}(hexa_cc[4]-1, hexa_cc[5]-1, hexa_cc[8]-1))
+        push!(faces, GLTriangle(hexa_cc[4], hexa_cc[1], hexa_cc[5]))
+        push!(faces, GLTriangle(hexa_cc[4], hexa_cc[5], hexa_cc[8]))
 
         if cind[1] == cextents[1]
-            push!(faces, Face{3,UInt32,-1}(hexa_cc[2]-1, hexa_cc[3]-1, hexa_cc[7]-1))
-            push!(faces, Face{3,UInt32,-1}(hexa_cc[2]-1, hexa_cc[7]-1, hexa_cc[6]-1))
+            push!(faces, GLTriangle(hexa_cc[2], hexa_cc[3], hexa_cc[7]))
+            push!(faces, GLTriangle(hexa_cc[2], hexa_cc[7], hexa_cc[6]))
         end
         if cind[2] == cextents[2]
-            push!(faces, Face{3,UInt32,-1}(hexa_cc[4]-1, hexa_cc[3]-1, hexa_cc[7]-1))
-            push!(faces, Face{3,UInt32,-1}(hexa_cc[4]-1, hexa_cc[7]-1, hexa_cc[8]-1))
+            push!(faces, GLTriangle(hexa_cc[4], hexa_cc[3], hexa_cc[7]))
+            push!(faces, GLTriangle(hexa_cc[4], hexa_cc[7], hexa_cc[8]))
         end
         if cind[3] == cextents[3]
-            push!(faces, Face{3,UInt32,-1}(hexa_cc[5]-1, hexa_cc[6]-1, hexa_cc[7]-1))
-            push!(faces, Face{3,UInt32,-1}(hexa_cc[5]-1, hexa_cc[7]-1, hexa_cc[8]-1))
+            push!(faces, GLTriangle(hexa_cc[5], hexa_cc[6], hexa_cc[7]))
+            push!(faces, GLTriangle(hexa_cc[5], hexa_cc[7], hexa_cc[8]))
         end
     end
 
