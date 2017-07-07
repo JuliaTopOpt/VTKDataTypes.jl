@@ -24,7 +24,7 @@ export AbstractVTKData, AbstractStaticVTKData, AbstractTimeSeriesVTKData, Abstra
     POINT_CELLS, LINE_CELLS, FACE_CELLS, VOLUME_CELLS, LINEAR_CELLS, QUADRATIC_CELLS, CUBIC_CELLS, 
     HIGHER_ORDER_CELLS, HIGHER_ORDER_PARAMETRIC_CELLS, SPECIAL_CELLS, promote_rule, size, length, 
     getindex, endof, start, next, done, same_geometry, ==, same_ordered_geometry, 
-    same_geometry_shape, same_data_shape, coherent, extents, dim, num_of_points, num_of_cells, 
+    same_geometry_shape, same_data_shape, coherent, extents, cell_extents, dim, num_of_points, num_of_cells, 
     num_of_point_vars, num_of_cell_vars, cell_type, cell_connectivity, has_var, var_dim, 
     vtk_cell_type_name, is_homogeneous, filter_cells!, keep_volume_cells_only!, 
     keep_face_cells_only!, get_cell_ids, get_lowest_index, get_highest_index, is_valid_cell, 
