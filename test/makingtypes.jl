@@ -1,7 +1,6 @@
 # This is an example that shows you how to create VTK data types natively in Julia
 
 using VTKDataTypes
-using VTKDataIO
 import GeometryTypes
 
 function create_image()
