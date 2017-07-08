@@ -65,9 +65,10 @@ num_of_cell_vars(dataset::AbstractVTKSimpleData) = length(dataset.cell_data)
 cell_type(dataset::Union{VTKUnstructuredData, VTKPolyData}, ind::Int) = dataset.cell_types[ind]
 cell_type(dataset::Union{VTKStructuredData, VTKRectilinearData}, ind::Int) = ind < 1 || ind > num_of_cells(dataset) ? throw("Out of bounds.") : dim(dataset) == 2 ? 9 : 12
 cell_type(dataset::VTKUniformRectilinearData, ind::Int) = ind < 1 || ind > num_of_cells(dataset) ? throw("Out of bounds.") : dim(dataset) == 2 ? 8 : 11
+cell_type{N}(dataset::AbstractVTKStructuredData, ind::NTuple{N,Int}) = cell_type(dataset, sub2ind(cell_extents(dataset), ind...))
 
 cell_connectivity(dataset::AbstractVTKUnstructuredData, cell_ind::Int) = dataset.cell_connectivity[cell_ind]
-function cell_connectivity{T<:AbstractVTKStructuredData, N<:Integer}(dataset::T, _cell_ind::NTuple{N, Int})
+function cell_connectivity{T<:AbstractVTKStructuredData, N}(dataset::T, _cell_ind::NTuple{N, Int})
     pextents = extents(dataset)
     cell_connectivity(T, pextents, _cell_ind)
 end

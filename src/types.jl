@@ -36,7 +36,6 @@ function VTKUnstructuredData{T1, T2, T3}(point_coords::Matrix{T1}, cell_types::V
     if T <: Integer
         T = Float64
     end
-    println("Here")
     VTKUnstructuredData{T}(point_coords, cell_types, cell_connectivity, point_data, cell_data, validate)
 end
 
@@ -211,10 +210,11 @@ end
 type VTKMultiblockData{T} <: AbstractVTKMultiblockData{T}
     blocks::Vector{AbstractStaticVTKData{T}}
 end
+VTKMultiblockData{S, T<:AbstractStaticVTKData{S}}(blocks::Vector{T}) = VTKMultiblockData{S}(AbstractStaticVTKData{S}.(blocks))
 
 type VTKTimeSeriesData{S, T<:AbstractStaticVTKData} <: AbstractTimeSeriesVTKData{S, T}
-    timemarkers::Vector{T}
-    data::Vector{S}
+    timemarkers::Vector{S}
+    data::Vector{T}
 
     function VTKTimeSeriesData{S, T}(timemarkers, data, validate=false) where {S, T<:AbstractStaticVTKData}
         dataset = new(timemarkers, data)
@@ -225,6 +225,7 @@ type VTKTimeSeriesData{S, T<:AbstractStaticVTKData} <: AbstractTimeSeriesVTKData
         dataset
     end
 end
-VTKTimeSeriesData{T, S<:AbstractStaticVTKData}(timemarkers::Vector{T}, data::Vector{S}, validate=false) = 
-    T <: Integer ? VTKTimeSeriesData{Float64, S}(timemarkers, data) : 
-    VTKTimeSeriesData{T, S}(timemarkers, data, validate)
+function VTKTimeSeriesData{S, T<:AbstractStaticVTKData}(timemarkers::Vector{S}, data::Vector{T}, validate=false)
+    _S = S <: Integer ? Float64 : S
+    return VTKTimeSeriesData{_S, T}(timemarkers, data)
+end
