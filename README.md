@@ -80,7 +80,7 @@ Has the same fields as `VTKUnstructuredData` but all cells are assumed to be of 
 
 `cell_data` : this is a `Dict{String, Array{T}}` holding cell-specific scalar and vector data. Scalar data arrays are stored in `Array{dims,T}`. The size of a scalar data array is `cell_extents(dataset)`, where `cell_extents` is a function that returns `extents(dataset) .- 1` resembling the number of cells along each dimension. Vector data arrays are stored in `Array{dims+1,T}` of size `(var_dims, cell_extents(dataset)...)`.
 
-All cells are of type 9 in 2D and 12 in 3D.
+All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
 ### VTKRectilinearData{T}
 
