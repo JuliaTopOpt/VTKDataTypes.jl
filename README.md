@@ -57,7 +57,7 @@ The following is a record of the ID associated with the most common cell types a
 
 For more, you can refer to `src/vtkcelltypes.jl`.
 
-### `VTKUnstructuredData{T}`
+### VTKUnstructuredData{T}
 `point_coords` : this is a `Matrix{T}` of size `(dims, points)` where `dims` is the number of dimensions and `points` is the number of points.
 
 `cell_types` : this is a `Vector{Int}` holding the cell types using VTK's convention for cell ids.
@@ -68,11 +68,11 @@ For more, you can refer to `src/vtkcelltypes.jl`.
 
 `cell_data` : this is a `Dict{String, Array{T}}` holding cell-specific scalar and vector data. Scalar data arrays are `Vector{T}` and vector data arrays are `Matrix{T}` of size `(var_dims, cells)` where `var_dims` is the number of dimensions of the vector variable and `cells` is the number of cells.
 
-### `VTKPolyData{T}`
+### VTKPolyData{T}
 
 Has the same fields as `VTKUnstructuredData` but all cells are assumed to be of types: 1, 2, 3, 4, 5, 6, 7, 8, and/or 9.
 
-### `VTKStructuredData{T}`
+### VTKStructuredData{T}
 
 `point_coords` : this is an `Array{dims+1,T}`. The size of the array is `(dims, extents(dataset)...)` where `extents` is a function that returns the number of grid markers along each dimension.
 
@@ -82,7 +82,7 @@ Has the same fields as `VTKUnstructuredData` but all cells are assumed to be of 
 
 All cells are of type 9 in 2D and 12 in 3D.
 
-### `VTKRectilinearData{T}`
+### VTKRectilinearData{T}
 
 `point_coords` : this is a `Vector{Vector{T}}` holding the x, y (and z) coordinates of the 2 or 3 dimensional rectilinear grid.
 
@@ -92,7 +92,7 @@ All cells are of type 9 in 2D and 12 in 3D.
 
 All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
-### `VTKUniformRectilinearData{T}` aka `VTKImageData{T}`
+### VTKUniformRectilinearData{T} aka VTKImageData{T}
 
 `origin` : a Vector{T} that refers to the origin of the 2D or 3D uniform rectilinear structure
 
@@ -106,13 +106,13 @@ All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
 All cells are of type 8 (Pixel) in 2D and 11 (Voxel) in 3D.
 
-### `VTKMultiblockData{T}`
+### VTKMultiblockData{T}
 
 `blocks` : a `Vector{AbstractStaticVTKData{T}}` which can store a mixture of all previous types with a common type parameter `T` as well as `VTKMultiblockData{T}` recursively.
 
 Iteration and indexing are defined for this type.
 
-### `VTKTimeseriesData{S,T<:AbstractStaticVTKData}`
+### VTKTimeseriesData{S,T<:AbstractStaticVTKData}
 
 `timemarkers` : a `Vector{S}` of frame times.
 `data` : a `Vector{T}` of any one of the previous data types. The type must be consistent for all the time steps.
