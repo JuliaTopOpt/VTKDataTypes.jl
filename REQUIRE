@@ -1,7 +1,7 @@
 julia 0.6
 
 WriteVTK
-PyGen
+https://github.com/nsmith5/PyGen.git
 GeometryTypes
 Colors
 Iterators
