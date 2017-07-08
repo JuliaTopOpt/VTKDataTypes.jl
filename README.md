@@ -115,6 +115,7 @@ Iteration and indexing are defined for this type.
 ### VTKTimeseriesData{S,T<:AbstractStaticVTKData}
 
 `timemarkers` : a `Vector{S}` of frame times.
+
 `data` : a `Vector{T}` of any one of the previous data types. The type must be consistent for all the time steps.
 
 Iteration and indexing are defined for this type. Integer indexing will access the frames by their index in the `data`. Frames can also be accessed by their time using floating point indexing. Automatic linear interpolation and constant extrapolation is done when indexing with time.
