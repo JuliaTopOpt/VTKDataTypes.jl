@@ -22,21 +22,37 @@ You can use the `GLMesh` function to change a VTK data object to a triangulated 
 ### VTK Cell Types
 
 The following is a record of the ID associated with the most common cell types as per VTK's convention:
+
 1	: 	VTK_VERTEX
+
 2	: 	VTK_POLY_VERTEX
+
 3	:	VTK_LINE
+
 4	:	VTK_POLY_LINE
+
 5	:	VTK_TRIANGLE
+
 6	:	VTK_TRIANGLE_STRIP
+
 7	:	VTK_POLYGON
+
 8	:	VTK_PIXEL
+
 9	:	VTK_QUAD
+
 10	:	VTK_TETRA 
+
 11	:	VTK_VOXEL
+
 12	:	VTK_HEXAHEDRON
+
 13	:	VTK_WEDGE 
+
 14	:	VTK_PYRAMID 
+
 15	:	VTK_PENTAGONAL_PRISM
+
 16	:	VTK_HEXAGONAL_PRISM 
 
 For more, you can refer to `src/vtkcelltypes.jl`.
@@ -92,14 +108,14 @@ All cells are of type 8 (Pixel) in 2D and 11 (Voxel) in 3D.
 
 ### `VTKMultiblockData{T}`
 
-`blocks` : a Vector{AbstractStaticVTKData{T}} which can store a mixture of all previous types with a common type parameter `T` as well as `VTKMultiblockData{T}` recursively.
+`blocks` : a `Vector{AbstractStaticVTKData{T}}` which can store a mixture of all previous types with a common type parameter `T` as well as `VTKMultiblockData{T}` recursively.
 
 Iteration and indexing are defined for this type.
 
 ### `VTKTimeseriesData{S,T<:AbstractStaticVTKData}`
 
-`timemarkers` : a Vector{S} of frame times.
-`data` : a Vector{T} of any one of the previous data types. The type must be consistent for all the time steps.
+`timemarkers` : a `Vector{S}` of frame times.
+`data` : a `Vector{T}` of any one of the previous data types. The type must be consistent for all the time steps.
 
 Iteration and indexing are defined for this type. Integer indexing will access the frames by their index in the `data`. Frames can also be accessed by their time using floating point indexing. Automatic linear interpolation and constant extrapolation is done when indexing with time.
 
