@@ -100,7 +100,7 @@ All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
 `extents` : a Vector{Int} that refers to the number of points along each axis
 
-`point_data` : simialr to `VTKStructuredData{T}`
+`point_data` : similar to `VTKStructuredData{T}`
 
 `cell_data` : similar to `VTKStructuredData{T}`
 
@@ -118,7 +118,7 @@ Iteration and indexing are defined for this type.
 
 `data` : a `Vector{T}` of any one of the previous data types. The type must be consistent for all the time steps.
 
-Iteration and indexing are defined for this type. Integer indexing will access the frames by their index in the `data`. Frames can also be accessed by their time using floating point indexing. Automatic linear interpolation and constant extrapolation is done when indexing with time.
+Iteration and indexing are defined for this type. Integer indexing will access the frames by their index in `data`. Frames can also be accessed by their time using floating point indexing. Automatic linear interpolation and constant extrapolation is done when indexing with time.
 
 ## Examples
 
