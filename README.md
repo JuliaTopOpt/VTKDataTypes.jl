@@ -74,11 +74,11 @@ Has the same fields as `VTKUnstructuredData` but all cells are assumed to be of 
 
 ### VTKStructuredData{T}
 
-`point_coords` : this is an `Array{dims+1,T}`. The size of the array is `(dims, extents(dataset)...)` where `extents` is a function that returns the number of grid markers along each dimension.
+`point_coords` : this is an `Array{T,dims+1}`. The size of the array is `(dims, extents(dataset)...)` where `extents` is a function that returns the number of grid markers along each dimension.
 
-`point_data` : this is a `Dict{String, Array{T}}` holding point-specific scalar and vector data. Scalar data arrays are stored in `Array{dims,T}`. The size of a scalar data array is `extents(dataset)`. Vector data arrays are stored in `Array{dims+1,T}` of size `(var_dims, extents(dataset)...)`.
+`point_data` : this is a `Dict{String, Array{T}}` holding point-specific scalar and vector data. Scalar data arrays are stored in `Array{T,dims}`. The size of a scalar data array is `extents(dataset)`. Vector data arrays are stored in `Array{T,dims+1}` of size `(var_dims, extents(dataset)...)`.
 
-`cell_data` : this is a `Dict{String, Array{T}}` holding cell-specific scalar and vector data. Scalar data arrays are stored in `Array{dims,T}`. The size of a scalar data array is `cell_extents(dataset)`, where `cell_extents` is a function that returns `extents(dataset) .- 1` resembling the number of cells along each dimension. Vector data arrays are stored in `Array{dims+1,T}` of size `(var_dims, cell_extents(dataset)...)`.
+`cell_data` : this is a `Dict{String, Array{T}}` holding cell-specific scalar and vector data. Scalar data arrays are stored in `Array{T,dims}`. The size of a scalar data array is `cell_extents(dataset)`, where `cell_extents` is a function that returns `extents(dataset) .- 1` resembling the number of cells along each dimension. Vector data arrays are stored in `Array{T,dims+1}` of size `(var_dims, cell_extents(dataset)...)`.
 
 All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
