@@ -1,4 +1,4 @@
-function is_valid_unstructured_mesh{_T<:AbstractVTKUnstructuredData}(dataset::_T, repeat_cells)
+function is_valid_unstructured_mesh{_T<:AbstractVTKUnstructuredData}(dataset::_T, repeat_cells::Bool)
     T = repr(_T)
     _point_coords, _cell_types, _cell_connectivity, _point_data, _cell_data = dataset.point_coords, 
         dataset.cell_types, dataset.cell_connectivity, dataset.point_data, dataset.cell_data
@@ -62,11 +62,11 @@ function is_valid_unstructured_mesh{_T<:AbstractVTKUnstructuredData}(dataset::_T
     return true, ""
 end
 
-function is_valid(dataset::VTKUnstructuredData; repeat_cells = false)
+function is_valid(dataset::VTKUnstructuredData; repeat_cells=false)
     return is_valid_unstructured_mesh(dataset, repeat_cells)
 end
 
-function is_valid(dataset::VTKPolyData)
+function is_valid(dataset::VTKPolyData; repeat_cells=false)
     T = "VTKPolyData"
     _cell_types, _cell_connectivity = dataset.cell_types, dataset.cell_connectivity
     
@@ -79,7 +79,7 @@ function is_valid(dataset::VTKPolyData)
         _out
     end || return false, "$T: At least one of the cells is a volume cell. $T can only have point, line or face cells, consider VTKUnstructuredData."
 
-    return is_valid_unstructured_mesh(dataset)
+    return is_valid_unstructured_mesh(dataset, repeat_cells)
 end
 
 function is_valid(dataset::VTKStructuredData)

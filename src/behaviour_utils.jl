@@ -138,6 +138,88 @@ function dim3!{S<:Real}(a::AbstractVTKUnstructuredData{S})
     end
 end
 
+function dim3!{S<:Real}(a::VTKUniformRectilinearData{S})
+    if dim(a) == 3
+        return
+    elseif dim(a) == 2
+        a.origin = [a.origin; 0]
+        a.spacing = [a.spacing; 0]
+        a.extents = [a.extents; 1]
+        for m in keys(a.point_data)
+            a.point_data[m] = reshape(a.point_data[m], (size(a.point_data[m])..., 1))
+        end
+        for m in keys(a.cell_data)
+            a.cell_data[m] = reshape(a.cell_data[m], (size(a.cell_data[m])..., 1))
+        end
+    
+        return
+    else
+        throw("Invalid dimension.")
+    end
+end
+
+function dim3!{S<:Real}(a::VTKRectilinearData{S})
+    if dim(a) == 3
+        return
+    elseif dim(a) == 2
+        a.point_coords = [a.point_coords; [0]]
+        for m in keys(a.point_data)
+            a.point_data[m] = reshape(a.point_data[m], (size(a.point_data[m])..., 1))
+        end
+        for m in keys(a.cell_data)
+            a.cell_data[m] = reshape(a.cell_data[m], (size(a.cell_data[m])..., 1))
+        end
+    
+        return
+    else
+        throw("Invalid dimension.")
+    end
+end
+
+function dim3!{S<:Real}(a::VTKStructuredData{S})
+    if dim(a) == 3
+        return
+    elseif dim(a) == 2
+        a.point_coords = reshape(cat(1, a.point_coords, zeros(1,extents(a)...)), (3, extents(a), 1))
+        for m in keys(a.point_data)
+            a.point_data[m] = reshape(a.point_data[m], (size(a.point_data[m])..., 1))
+        end
+        for m in keys(a.cell_data)
+            a.cell_data[m] = reshape(a.cell_data[m], (size(a.cell_data[m])..., 1))
+        end
+    
+        return
+    else
+        throw("Invalid dimension.")
+    end
+end
+
+function dim3!{S<:Real}(a::VTKMultiblockData{S})
+    if dim(a) == 3
+        return
+    elseif dim(a) == 2
+        for block in simple_block_generator(a)
+            dim3!(block)
+        end
+        return
+    else
+        throw("Invalid dimension.")
+    end
+end
+
+function dim3!{S, T<:AbstractStaticVTKData}(a::VTKTimeSeriesData{S,T})
+    if dim(a) == 3
+        return
+    elseif dim(a) == 2
+        for timedblock in a
+            dim3!(timedblock)
+        end
+        return
+    else
+        throw("Invalid dimension.")
+    end
+end
+
 function celldata_to_pointdata!(dataset::AbstractVTKUnstructuredData)
     point_coords = dataset.point_coords
     point_data = dataset.point_data

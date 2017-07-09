@@ -65,9 +65,9 @@ function create_structured_data()
     structured = VTKStructuredData(rectilinear)
     @test size(structured.point_coords) == (3,extents(rectilinear)...) == (3,5,5,5)
 
-    extents(structured) == extents(rectilinear) == (5,5,5)
-    cell_extents(structured) == cell_extents(rectilinear) == (4,4,4)
-    dim(structured) == dim(rectilinear) == 3
+    @test extents(structured) == extents(rectilinear) == (5,5,5)
+    @test cell_extents(structured) == cell_extents(rectilinear) == (4,4,4)
+    @test dim(structured) == dim(rectilinear) == 3
 
     structured.point_data["Point scalar data"] = zeros(extents(structured)...)
     structured.cell_data["Cell scalar data"] = zeros(cell_extents(structured)...)

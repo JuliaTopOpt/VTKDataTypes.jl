@@ -7,7 +7,7 @@ VTKDataTypes.jl presents a Julia type system for representing and manipulating V
 
 ### VTK data representation
 
-You can use VTKDataTypes.jl to create your own VTK data object of any of the following types: `VTKUnstructuredData`, `VTKPolyData`, `VTKStructuredData`, `VTKRectilinearData`, `VTKImageData`, `VTKMultiblockData`, and `VTKTimeseriesData`. 2D and 3D data are both supported and conversion functions are defined where they make sense.
+You can use VTKDataTypes.jl to create your own VTK data object of any of the following types: `VTKUnstructuredData`, `VTKPolyData`, `VTKStructuredData`, `VTKRectilinearData`, `VTKImageData`, `VTKMultiblockData`, and `VTKTimeSeriesData`. 2D and 3D data are both supported and conversion functions are defined where they make sense.
 
 ### Decomposing and triangulation
 
@@ -112,7 +112,7 @@ All cells are of type 8 (Pixel) in 2D and 11 (Voxel) in 3D.
 
 Iteration and indexing are defined for this type.
 
-### VTKTimeseriesData{S,T<:AbstractStaticVTKData}
+### VTKTimeSeriesData{S,T<:AbstractStaticVTKData}
 
 `timemarkers` : a `Vector{S}` of frame times.
 

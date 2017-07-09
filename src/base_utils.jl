@@ -328,6 +328,13 @@ function =={S1<:Real, S2<:Real, S3<:AbstractStaticVTKData{S2}, T<:AbstractTimeSe
     return true
 end
 
+function =={S, T1<:AbstractStaticVTKData{S}, T<:AbstractTimeSeriesVTKData{S,T1}}(a::T, b::T)
+    length(a) == length(b) || return false
+    a.timemarkers == b.timemarkers || return false
+    a.data == b.data || return false
+    return true
+end
+
 =={T1<:AbstractVTKData, T2<:AbstractVTKData}(a::T1,b::T2) = false
 
 function append!(datasets::AbstractVTKUnstructuredData...)
