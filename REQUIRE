@@ -3,4 +3,4 @@ julia 0.6
 WriteVTK
 GeometryTypes
 Colors
-Iterators
+IterTools
