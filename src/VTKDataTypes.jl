@@ -5,7 +5,7 @@ using WriteVTK
 using PyGen
 using GeometryTypes
 using Colors
-using Iterators
+using IterTools
 
 include("vtkcelltypes.jl")
 include("types.jl")
