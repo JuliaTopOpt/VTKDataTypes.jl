@@ -1,7 +1,7 @@
 # VTKDataTypes
 ## Overview
 
-VTKDataTypes.jl presents a Julia type system for representing and manipulating VTK data natively in Julia. **VTKDataTypes.jl only supports Julia v0.6.**
+VTKDataTypes.jl presents a Julia type system for representing and manipulating VTK data natively in Julia. **VTKDataTypes.jl only supports Julia v1.**
 
 ## Summary of capabilities
 
@@ -64,9 +64,9 @@ For more, you can refer to `src/vtkcelltypes.jl`.
 
 `cell_connectivity` : this is a `Vector{Vector{Int}}` holding the cell connectivity of each cell as per VTK's convention for each cell type.
 
-`point_data` : this is a `Dict{String, Array{T}}` holding point-specific scalar and vector data. Scalar data arrays are `Vector{T}` and vector data arrays are `Matrix{T}` of size `(var_dims, points)` where `var_dims` is the number of dimensions of the vector variable.
+`point_data` : this is a `Dict{String, Array}` holding point-specific scalar and vector data. Scalar data arrays are `Vector{T}` and vector data arrays are `Matrix{T}` of size `(var_dims, points)` where `var_dims` is the number of dimensions of the vector variable.
 
-`cell_data` : this is a `Dict{String, Array{T}}` holding cell-specific scalar and vector data. Scalar data arrays are `Vector{T}` and vector data arrays are `Matrix{T}` of size `(var_dims, cells)` where `var_dims` is the number of dimensions of the vector variable and `cells` is the number of cells.
+`cell_data` : this is a `Dict{String, Array}` holding cell-specific scalar and vector data. Scalar data arrays are `Vector{T}` and vector data arrays are `Matrix{T}` of size `(var_dims, cells)` where `var_dims` is the number of dimensions of the vector variable and `cells` is the number of cells.
 
 ### VTKPolyData{T}
 
@@ -76,15 +76,15 @@ Has the same fields as `VTKUnstructuredData` but all cells are assumed to be of 
 
 `point_coords` : this is an `Array{T,dims+1}`. The size of the array is `(dims, extents(dataset)...)` where `extents` is a function that returns the number of grid markers along each dimension.
 
-`point_data` : this is a `Dict{String, Array{T}}` holding point-specific scalar and vector data. Scalar data arrays are stored in `Array{T,dims}`. The size of a scalar data array is `extents(dataset)`. Vector data arrays are stored in `Array{T,dims+1}` of size `(var_dims, extents(dataset)...)`.
+`point_data` : this is a `Dict{String, Array}` holding point-specific scalar and vector data. Scalar data arrays are stored in `Array{T,dims}`. The size of a scalar data array is `extents(dataset)`. Vector data arrays are stored in `Array{T,dims+1}` of size `(var_dims, extents(dataset)...)`.
 
-`cell_data` : this is a `Dict{String, Array{T}}` holding cell-specific scalar and vector data. Scalar data arrays are stored in `Array{T,dims}`. The size of a scalar data array is `cell_extents(dataset)`, where `cell_extents` is a function that returns `extents(dataset) .- 1` resembling the number of cells along each dimension. Vector data arrays are stored in `Array{T,dims+1}` of size `(var_dims, cell_extents(dataset)...)`.
+`cell_data` : this is a `Dict{String, Array}` holding cell-specific scalar and vector data. Scalar data arrays are stored in `Array{T,dims}`. The size of a scalar data array is `cell_extents(dataset)`, where `cell_extents` is a function that returns `extents(dataset) .- 1` resembling the number of cells along each dimension. Vector data arrays are stored in `Array{T,dims+1}` of size `(var_dims, cell_extents(dataset)...)`.
 
 All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
 ### VTKRectilinearData{T}
 
-`point_coords` : this is a `Vector{Vector{T}}` holding the x, y (and z) coordinates of the 2 or 3 dimensional rectilinear grid.
+`point_coords` : this is a `NTuple{dim, Vector{T}}` holding the x, y (and z) coordinates of the `dim` dimensional rectilinear grid.
 
 `point_data` : similar to `VTKStructuredData{T}`
 
@@ -94,11 +94,11 @@ All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
 ### VTKUniformRectilinearData{T} aka VTKImageData{T}
 
-`origin` : a Vector{T} that refers to the origin of the 2D or 3D uniform rectilinear structure
+`origin` : an `NTuple{dim, T}` that refers to the origin of the uniform rectilinear structure of dimension `dim`
 
-`spacing` : a Vector{T} that refers to the spacing between grid lines along each axis
+`spacing` : an `NTuple{dim, T}` that refers to the spacing between grid lines along each axis
 
-`extents` : a Vector{Int} that refers to the number of points along each axis
+`extents` : an `NTuple{dim, Int}` that refers to the number of points along each axis
 
 `point_data` : similar to `VTKStructuredData{T}`
 
@@ -106,21 +106,20 @@ All cells are of type 9 (Quad) in 2D and 12 (Hexa) in 3D.
 
 All cells are of type 8 (Pixel) in 2D and 11 (Voxel) in 3D.
 
-### VTKMultiblockData{T}
+### VTKMultiblockData
 
-`blocks` : a `Vector{AbstractStaticVTKData{T}}` which can store a mixture of all previous types with a common type parameter `T` as well as `VTKMultiblockData{T}` recursively.
+`blocks` : a `Tuple{Vararg{AbstractStaticVTKData}}` which can store a mixture of all previous types as well as `VTKMultiblockData` recursively.
 
 Iteration and indexing are defined for this type.
 
-### VTKTimeSeriesData{S,T<:AbstractStaticVTKData}
+### VTKTimeSeriesData{TTime, TData <: AbstractStaticVTKData}
 
-`timemarkers` : a `Vector{S}` of frame times.
+`timemarkers` : a `Vector{TTime}` of frame times.
 
-`data` : a `Vector{T}` of any one of the previous data types. The type must be consistent for all the time steps.
+`data` : a `Vector{TData}` of any one of the previous data types. The type must be consistent for all the time steps.
 
 Iteration and indexing are defined for this type. Integer indexing will access the frames by their index in `data`. Frames can also be accessed by their time using floating point indexing. Automatic linear interpolation and constant extrapolation is done when indexing with time.
 
 ## Examples
 
 Please refer to the `tests` folder for examples.
-
