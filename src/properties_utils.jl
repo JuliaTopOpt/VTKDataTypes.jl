@@ -278,55 +278,55 @@ function bb_unstruct(dataset::AbstractVTKUnstructuredData)
     end
 end
 
-@pygen function surface_cell_inds(dataset::AbstractVTKStructuredData)
+@resumable function surface_cell_inds(dataset::AbstractVTKStructuredData)
     cextents = cell_extents(dataset)
     if dim(dataset) == 2
         i = 1
         for j in 1:cextents[2]
-            yield((i,j))
+            @yield (i,j)
         end
         j = 1
         for i in 2:cextents[1]
-            yield((i,j))
+            @yield (i,j)
         end
 
         i = cextents[1]
         for j in 2:cextents[2]
-            yield((i,j))
+            @yield (i,j)
         end
         j = cextents[2]
         for i in 2:cextents[1]-1
-            yield((i,j))
+            @yield (i,j)
         end
     else
         i = 1
         for j in 1:cextents[2], k in 1:cextents[3]
-            yield((i,j,k))
+            @yield (i,j,k)
         end
         
         j = 1
         for i in 2:cextents[1], k in 1:cextents[3]
-            yield((i,j,k))
+            @yield (i,j,k)
         end
 
         k = 1
         for i in 2:cextents[1], j in 2:cextents[2]
-            yield((i,j,k))
+            @yield (i,j,k)
         end
 
         i = cextents[1]
         for j in 2:cextents[2], k in 2:cextents[3]
-            yield((i,j,k))
+            @yield (i,j,k)
         end
         
         j = cextents[2]
         for i in 2:cextents[1]-1, k in 2:cextents[3]
-            yield((i,j,k))
+            @yield (i,j,k)
         end
 
         k = cextents[3]
         for i in 2:cextents[1]-1, j in 2:cextents[3]-1
-            yield((i,j,k))
+            @yield (i,j,k)
         end
     end
 end

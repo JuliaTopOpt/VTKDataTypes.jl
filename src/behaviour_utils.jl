@@ -115,14 +115,14 @@ function increase_resolution!(dataset::VTKTimeSeriesData, resolution::Int)
     return
 end
 
-@pygen function simple_block_generator(multiblock::VTKMultiblockData)
+@resumable function simple_block_generator(multiblock::VTKMultiblockData)
     for block in multiblock
         if typeof(block) <: VTKMultiblockData
             for b in simple_block_generator(block)
-                yield(b)
+                @yield b
             end
         else
-            yield(block)
+            @yield block
         end
     end
 end

@@ -2,7 +2,7 @@ __precompile__()
 module VTKDataTypes
 
 using WriteVTK
-using PyGen
+using ResumableFunctions
 using GeometryTypes
 using Colors
 using IterTools
