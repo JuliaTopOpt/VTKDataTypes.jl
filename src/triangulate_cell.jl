@@ -1,4 +1,3 @@
-
 function triangulate_cell(cell_connectivity::Vector{Int}, cell_type::Int)
     if cell_type == 5 || cell_type == 6 || cell_type == 10
         return decompose_cell(cell_connectivity, cell_type, target = "Faces")[1]

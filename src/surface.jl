@@ -8,7 +8,7 @@ function extract_surface(_dataset::AbstractVTKStructuredData)
     cextents = cell_extents(dataset)
     faces = Vector{Int}[]
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(_dataset.cell_data)
     for m in keys(dataset.cell_data)
         _cell_data[m] = Float64[]
     end
@@ -66,7 +66,7 @@ function extract_surface(_dataset::AbstractVTKStructuredData)
 
     _point_coords = Float64[]
     point_inds = Int[]
-    _point_data = Dict{String, Array{Float64}}()
+    _point_data = empty(_dataset.point_data)
     for m in keys(dataset.point_data)
         _point_data[m] = Float64[]
     end
@@ -108,7 +108,7 @@ function extract_surface(_dataset::AbstractVTKStructuredData)
     return VTKPolyData(_point_coords, _cell_types, faces, _point_data, _cell_data)
     #=
     _point_coords = reshape(dataset.point_coords, (3, num_of_points(dataset)))
-    _point_data = Dict{String, Array{Float64}}()
+    _point_data = empty(_dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -144,7 +144,7 @@ function extract_surface{T<:AbstractVTKUnstructuredData}(dataset::T)
     #Sorted inds and cell type are keys
     #Cell connectivity, cell count, and cell data are the values
 
-    cell_register = Dict{Tuple{Vector{Int}, Int}, Tuple{Vector{Int}, _Counter, Dict{String, Array{Float64}}}}()
+    cell_register = Dict{Tuple{Vector{Int}, Int}, Tuple{Vector{Int}, _Counter, typeof(dataset.cell_data)}}()
     for i in 1:length(dataset.cell_connectivity)
         if dataset.cell_types[i] ∉ POLY_CELLS
             _cells, _types = decompose_cell(dataset.cell_connectivity[i], dataset.cell_types[i], target="Faces")
@@ -156,7 +156,7 @@ function extract_surface{T<:AbstractVTKUnstructuredData}(dataset::T)
             if haskey(cell_register, _key)
                 cell_register[_key][2].a += 1
             else
-                cell_register[_key] = (_cells[j], _Counter(1), Dict{String, Array{Float64}}())
+                cell_register[_key] = (_cells[j], _Counter(1), empty(dataset.cell_data))
                 for m in keys(dataset.cell_data)
                     _var_dim = var_dim(dataset, m, "Cell")
                     if _var_dim == 1
@@ -169,7 +169,7 @@ function extract_surface{T<:AbstractVTKUnstructuredData}(dataset::T)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     _cell_connectivity = Vector{Int}[]
     _cell_types = Int[]
 
@@ -197,7 +197,7 @@ function extract_surface{T<:AbstractVTKUnstructuredData}(dataset::T)
 
     _point_coords = Float64[]
     point_inds = Int[]
-    _point_data = Dict{String, Array{Float64}}()
+    _point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _point_data[m] = Float64[]
     end

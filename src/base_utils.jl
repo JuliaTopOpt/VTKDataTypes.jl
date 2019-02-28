@@ -1,13 +1,13 @@
-import Base: promote_rule, size, length, getindex, endof, start, next, done, ==, append!, +, *, /
+import Base: promote_rule, size, length, getindex, iterate, ==, append!, +, *, /
 
-promote_rule(::Type{VTKUniformRectilinearData}, ::Type{VTKRectilinearData}) = VTKRectilinearData
-promote_rule(::Type{VTKUniformRectilinearData}, ::Type{VTKStructuredData}) = VTKStructuredData
-promote_rule(::Type{VTKRectilinearData}, ::Type{VTKStructuredData}) = VTKStructuredData
-promote_rule(::Type{VTKUniformRectilinearData}, ::Type{VTKUnstructuredData}) = VTKUnstructuredData
-promote_rule(::Type{VTKRectilinearData}, ::Type{VTKUnstructuredData}) = VTKUnstructuredData
-promote_rule(::Type{VTKStructuredData}, ::Type{VTKUnstructuredData}) = VTKUnstructuredData
-promote_rule{T <: AbstractVTKSimpleData}(::Type{VTKMultiblockData}, ::Type{T}) = VTKMultiblockData
-promote_rule{T<:AbstractVTKData}(::Type{T}, ::Type{T}) = T
+promote_rule(::Type{<:VTKUniformRectilinearData}, ::Type{<:VTKRectilinearData}) = VTKRectilinearData
+promote_rule(::Type{<:VTKUniformRectilinearData}, ::Type{<:VTKStructuredData}) = VTKStructuredData
+promote_rule(::Type{<:VTKRectilinearData}, ::Type{<:VTKStructuredData}) = VTKStructuredData
+promote_rule(::Type{<:VTKUniformRectilinearData}, ::Type{<:VTKUnstructuredData}) = VTKUnstructuredData
+promote_rule(::Type{<:VTKRectilinearData}, ::Type{<:VTKUnstructuredData}) = VTKUnstructuredData
+promote_rule(::Type{<:VTKStructuredData}, ::Type{<:VTKUnstructuredData}) = VTKUnstructuredData
+promote_rule(::Type{<:VTKMultiblockData}, ::Type{T}) where {T <: AbstractVTKSimpleData} = VTKMultiblockData
+promote_rule(::Type{T}, ::Type{T}) where {T<:AbstractVTKData} = T
 
 size(dataset::AbstractTimeSeriesVTKData) = (num_of_timesteps(dataset),)
 size(dataset::AbstractVTKMultiblockData) = (num_of_blocks(dataset),)
@@ -23,26 +23,31 @@ function getindex(dataset::AbstractTimeSeriesVTKData, t::AbstractFloat)
     elseif loc.stop == length(dataset)
         return dataset[end]
     else
-        return ((dataset.timemarkers[loc.start] - t) * dataset[loc.stop] + (t - dataset.timemarkers[loc.stop]) * dataset[loc.start]) / (dataset.timemarkers[loc.start] - dataset.timemarkers[loc.stop])
+        return ((dataset.timemarkers[loc.start] - t) * dataset[loc.stop] + 
+                (t - dataset.timemarkers[loc.stop]) * dataset[loc.start]) / 
+                (dataset.timemarkers[loc.start] - dataset.timemarkers[loc.stop])
     end
 end
 getindex(dataset::AbstractVTKMultiblockData, inds::OrdinalRange{Int,Int}) = dataset.blocks[inds]
-endof(dataset::Union{AbstractTimeSeriesVTKData,AbstractVTKMultiblockData}) = length(dataset)
 
-start(dataset::AbstractTimeSeriesVTKData) = 1
-start(dataset::AbstractVTKMultiblockData) = 1
-next(dataset::AbstractTimeSeriesVTKData, i::Integer) = dataset.data[i], i+1
-next(dataset::AbstractVTKMultiblockData, i::Integer) = dataset.blocks[i], i+1
-done(dataset::Union{AbstractTimeSeriesVTKData,AbstractVTKMultiblockData}, i::Integer) = i > length(dataset)
+function iterate(dataset::AbstractTimeSeriesVTKData, i=1)
+    i > length(dataset) && return nothing
+    return dataset.data[i], i+1
+end
+function iterate(dataset::AbstractVTKMultiblockData, i=1)
+    i > length(dataset) && return nothing
+    return dataset.blocks[i], i+1
+end
 
-function +{S<:Real, T<:AbstractStaticVTKData{S}}(a::T, b::T)
-    T <: AbstractVTKMultiblockData && same_ordered_geometry_shape(a,b) ||
+function +(a::T, b::T) where {T<:AbstractStaticVTKData}
+    if !(T <: AbstractVTKMultiblockData) || !(same_ordered_geometry_shape(a,b))
         same_geometry_shape(a,b) || throw("Cannot add two datasets with different geometry structure.")
-    T <: AbstractVTKMultiblockData || same_data_shape(a,b) || 
-        throw("Cannot add two datasets with different data variables.")
-
+    end
+    if !(T <: AbstractVTKMultiblockData)
+        same_data_shape(a,b) || throw("Cannot add two datasets with different data variables.")
+    end
     if T <: AbstractVTKMultiblockData
-        return VTKMultiblockData([block1+block2 for (block1, block2) in zip(a,b)])
+        return VTKMultiblockData(ntuple(i -> a[i] + b[i], Val(length(a))))
     elseif T <: AbstractVTKUnstructuredData || T <: AbstractVTKStructuredData
         point_coords = a.point_coords + b.point_coords
     elseif T <: VTKRectilinearData
@@ -52,11 +57,11 @@ function +{S<:Real, T<:AbstractStaticVTKData{S}}(a::T, b::T)
         spacing = a.spacing + b.spacing
     end
 
-    point_data = Dict{String, Array{S}}()
+    point_data = empty(a.point_data)
     for m in keys(a.point_data)
         point_data[m] = a.point_data[m] + b.point_data[m]
     end
-    cell_data = Dict{String, Array{S}}()
+    cell_data = empty(a.cell_data)
     for m in keys(a.cell_data)
         cell_data[m] = a.cell_data[m] + b.cell_data[m]
     end
@@ -71,9 +76,9 @@ function +{S<:Real, T<:AbstractStaticVTKData{S}}(a::T, b::T)
 end
 
 *(b::Real, a::AbstractStaticVTKData) = *(a,b)
-function *{S1<:Real, T<:AbstractStaticVTKData{S1}, S2<:Real}(a::T, b::S2)
+function *(a::T, b::Real) where {T <: AbstractStaticVTKData}
     if T <: AbstractVTKMultiblockData
-        return VTKMultiblockData([*(block, b) for block in a])
+        return VTKMultiblockData(ntuple(i -> *(a[i], b), Val(length(a))))
     elseif T <: AbstractVTKUnstructuredData || T <: AbstractVTKStructuredData
         point_coords = a.point_coords .* b
     elseif T <: VTKRectilinearData
@@ -83,11 +88,11 @@ function *{S1<:Real, T<:AbstractStaticVTKData{S1}, S2<:Real}(a::T, b::S2)
         spacing = a.spacing .* b
     end
 
-    point_data = Dict{String, Array{S1}}()
+    point_data = empty(a.point_data)
     for m in keys(a.point_data)
         point_data[m] = a.point_data[m] .* b
     end
-    cell_data = Dict{String, Array{S1}}()
+    cell_data = empty(a.cell_data)
     for m in keys(a.cell_data)
         cell_data[m] = a.cell_data[m] .* b
     end
@@ -101,11 +106,11 @@ function *{S1<:Real, T<:AbstractStaticVTKData{S1}, S2<:Real}(a::T, b::S2)
     end
 end
 
-function /{S1<:Real, T<:AbstractStaticVTKData{S1}, S2<:Real}(a::T, b::S2)
+function /(a::T, b::Real) where {T <: AbstractStaticVTKData}
     b != 0 || throw("Cannot divide a dataset by zero.")
 
     if T <: AbstractVTKMultiblockData
-        return VTKMultiblockData([block / b for block in a])
+        return VTKMultiblockData(ntuple(i -> a[i] / b, Val(length(a))))
     elseif T <: AbstractVTKUnstructuredData || T <: AbstractVTKStructuredData
         point_coords = a.point_coords ./ b
     elseif T <: VTKRectilinearData
@@ -115,11 +120,11 @@ function /{S1<:Real, T<:AbstractStaticVTKData{S1}, S2<:Real}(a::T, b::S2)
         spacing = a.spacing ./ b
     end
 
-    point_data = Dict{String, Array{S1}}()
+    point_data = empty(a.point_data)
     for m in keys(a.point_data)
         point_data[m] = a.point_data[m] ./ b
     end
-    cell_data = Dict{String, Array{S1}}()
+    cell_data = empty(a.cell_data)
     for m in keys(a.cell_data)
         cell_data[m] = a.cell_data[m] ./ b
     end
@@ -133,14 +138,19 @@ function /{S1<:Real, T<:AbstractStaticVTKData{S1}, S2<:Real}(a::T, b::S2)
     end
 end
 
-=={S<:Real, T<:AbstractVTKStructuredData{S}}(a::T,b::T) = same_geometry(a,b) && a.point_data == b.point_data && a.cell_data == b.cell_data
-=={S<:Real, T<:VTKUniformRectilinearData{S}}(a::T, b::T) = dim(a) == dim(b) && extents(a) == extents(b) && 
-    num_of_points(a) == num_of_points(b) && num_of_cells(a) == num_of_cells(b) && 
-    a.origin == b.origin && a.spacing == b.spacing && a.point_data == b.point_data && 
-    a.cell_data == b.cell_data
-=={S<:Real, T<:VTKMultiblockData{S}}(a::T, b::T) = length(a) == length(b) && a ⊆ b && b ⊆ a
-
-function =={S<:Real}(a::AbstractVTKUnstructuredData{S}, b::AbstractVTKUnstructuredData{S})
+function ==(a::T,b::T) where {T<:AbstractVTKStructuredData}
+    return same_geometry(a,b) && a.point_data == b.point_data && a.cell_data == b.cell_data
+end
+function ==(a::T, b::T) where {T<:VTKUniformRectilinearData}
+    return  dim(a) == dim(b) && extents(a) == extents(b) && 
+            num_of_points(a) == num_of_points(b) && num_of_cells(a) == num_of_cells(b) && 
+            a.origin == b.origin && a.spacing == b.spacing && a.point_data == b.point_data && 
+            a.cell_data == b.cell_data
+end
+function ==(a::T, b::T) where {T<:VTKMultiblockData}
+    return length(a) == length(b) && a ⊆ b && b ⊆ a
+end
+function ==(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructuredData)
     dim(a) != dim(b) && return false
     num_of_points(a) != num_of_points(b) && return false
     num_of_cells(a) != num_of_cells(b) && return false
@@ -150,7 +160,7 @@ function =={S<:Real}(a::AbstractVTKUnstructuredData{S}, b::AbstractVTKUnstructur
     b_image_point_inds = zeros(Int, _num_of_points)
     for i in 1:_num_of_points
         for j in 1:_num_of_points
-            if b.point_coords[:,i] == a.point_coords[:,j]
+            @views if b.point_coords[:,i] == a.point_coords[:,j]
                 b_image_point_inds[i] = j
                 break
             end
@@ -162,7 +172,7 @@ function =={S<:Real}(a::AbstractVTKUnstructuredData{S}, b::AbstractVTKUnstructur
 
     #Describing a cell of b in terms of points of a
     function map_cell_connectivity(b_cell_connectivity::Vector{Int})
-        b_cell_connectivity_mapped = zeros(b_cell_connectivity)
+        b_cell_connectivity_mapped = zeros(Int, length(b_cell_connectivity))
         for i in 1:length(b_cell_connectivity)
             b_cell_connectivity_mapped[i] = b_image_point_inds[b_cell_connectivity[i]]
         end
@@ -175,7 +185,11 @@ function =={S<:Real}(a::AbstractVTKUnstructuredData{S}, b::AbstractVTKUnstructur
     b_image_cell_inds = zeros(Int, _num_of_cells)
     for i in 1:_num_of_cells
         for j in 1:_num_of_cells
-            if similar_cells(b_cell_connectivity_mapped[i], cell_type(b,i), a.cell_connectivity[j], cell_type(a,j))
+            if similar_cells( b_cell_connectivity_mapped[i], 
+                              cell_type(b,i), 
+                              a.cell_connectivity[j], 
+                              cell_type(a,j)
+                            )
                 b_image_cell_inds[i] = j
                 break
             end
@@ -209,7 +223,7 @@ function =={S<:Real}(a::AbstractVTKUnstructuredData{S}, b::AbstractVTKUnstructur
                 b.point_data[v][i] != a.point_data[v][b_image_point_inds[i]] && return false
             end        
         else
-            for i in 1:_num_of_points
+            @views for i in 1:_num_of_points
                 b.point_data[v][:,i] != a.point_data[v][:,b_image_point_inds[i]] && return false
             end
         end            
@@ -222,7 +236,7 @@ function =={S<:Real}(a::AbstractVTKUnstructuredData{S}, b::AbstractVTKUnstructur
                 b.cell_data[v][i] == a.cell_data[v][b_image_cell_inds[i]] || return false
             end
         else
-            for i in 1:_num_of_cells
+            @views for i in 1:_num_of_cells
                 b.cell_data[v][:,i] == a.cell_data[v][:,b_image_cell_inds[i]] || return false
             end
         end
@@ -320,22 +334,14 @@ function ==(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructuredData)
 end
 =#
 
-function =={S1<:Real, S2<:Real, S3<:AbstractStaticVTKData{S2}, T<:AbstractTimeSeriesVTKData{S1, S3}}(a::T,b::T)
-    length(a) == length(b) || return false
-    for i in 1:length(a)
-        a[i] == b[i] || return false
-    end
-    return true
-end
-
-function =={S, T1<:AbstractStaticVTKData{S}, T<:AbstractTimeSeriesVTKData{S,T1}}(a::T, b::T)
+function ==(a::T, b::T) where {T<:AbstractTimeSeriesVTKData}
     length(a) == length(b) || return false
     a.timemarkers == b.timemarkers || return false
     a.data == b.data || return false
     return true
 end
 
-=={T1<:AbstractVTKData, T2<:AbstractVTKData}(a::T1,b::T2) = false
+==(a::AbstractVTKData, b::AbstractVTKData) = false
 
 function append!(datasets::AbstractVTKUnstructuredData...)
     dataset1 = datasets[1]
@@ -345,7 +351,7 @@ function append!(datasets::AbstractVTKUnstructuredData...)
         dataset1.point_coords = [dataset1.point_coords datasets[i].point_coords]
         dataset1.cell_types = [dataset1.cell_types; datasets[i].cell_types]
         dataset1.cell_connectivity = [dataset1.cell_connectivity; datasets[i].cell_connectivity]
-        for j in (cell_offset+1):length(dataset1.cell_connectivity)
+        for j in (cell_offset + 1):length(dataset1.cell_connectivity)
             dataset1.cell_connectivity[j] .+= point_offset
         end
         
@@ -374,4 +380,3 @@ function append!(datasets::AbstractVTKUnstructuredData...)
 
     return dataset1
 end
-

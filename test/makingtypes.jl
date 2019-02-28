@@ -4,14 +4,14 @@ using VTKDataTypes
 import GeometryTypes
 
 function create_image()
-    origin = [0, 0, 0]
-    spacing = [1., 2., 1.,]
-    _extents = [2, 3, 5] #Must be Vector{Int}
+    origin = (0.0, 0.0, 0.0)
+    spacing = (1.0, 2.0, 1.0)
+    _extents = (2, 3, 5) #Must be Vector{Int}
 
     image = VTKImageData(origin, spacing, _extents)
     @test dim(image) == 3
-    @test [extents(image)...] == image.extents
-    @test [cell_extents(image)...] == image.extents .- 1
+    @test extents(image) == image.extents
+    @test cell_extents(image) == image.extents .- 1
 
     image.point_data["Point scalar data"] = zeros(extents(image)...)
     image.cell_data["Cell scalar data"] = zeros(cell_extents(image)...)
@@ -28,9 +28,9 @@ function create_image()
 end
 
 function create_rectilinear_data1()
-    x = y = z = collect(linspace(-2,2,5))
+    x = y = z = collect(range(-2, stop=2, length=5))
 
-    rectilinear = VTKRectilinearData([x,y,z])
+    rectilinear = VTKRectilinearData((x, y, z))
     @test dim(rectilinear) == 3
     @test extents(rectilinear) == (5,5,5)
     @test cell_extents(rectilinear) == (4,4,4)
@@ -117,14 +117,13 @@ function create_poly_data()
 end
 
 function create_multiblock_data()
-    mb = VTKMultiblockData([create_image(), create_rectilinear_data1(), 
-        create_structured_data(), create_unstructured_data(), create_poly_data()])
+    mb = VTKMultiblockData((create_image(), create_rectilinear_data1(), 
+        create_structured_data(), create_unstructured_data(), create_poly_data()))
     @test length(mb) == 5
     for b in mb
         @test isa(b, AbstractVTKSimpleData)
     end
-
-    mb2 = VTKMultiblockData([mb, create_image()])
+    mb2 = VTKMultiblockData((mb, create_image()))
     for b in simple_block_generator(mb2) #Recursively unwraps any VTKMultiblockData
         @test isa(b, AbstractVTKSimpleData)
     end
@@ -137,7 +136,7 @@ function create_timeseries_data()
 
     #2D polydata
     x = y = [0., 1., 2.];
-    point_coords = [x,y];
+    point_coords = (x, y);
     point_data = Dict{String, Array{Float64}}();
     cell_data = Dict{String, Array{Float64}}();
     a = VTKRectilinearData(point_coords, point_data, cell_data);
@@ -145,11 +144,11 @@ function create_timeseries_data()
     b = VTKPolyData(a);
 
     x = y = [3., 4., 5.];
-    point_coords = [x,y];
+    point_coords = (x, y);
     c = VTKPolyData(VTKRectilinearData(point_coords, point_data, cell_data));
     c.cell_data["Color"] = rand(num_of_cells(c));
 
-    m = VTKMultiblockData([b, c]);
+    m = VTKMultiblockData((b, c));
     timeseries = VTKTimeSeriesData([0.], [m]);
 
     no_of_timesteps = 5;

@@ -4,23 +4,21 @@ function triangulate(_dataset::AbstractVTKStructuredData, decompose_cell_data::B
 
     if decompose_cell_data
         if _dim == 2
-            _func = :triangulate_2d_with_cell_data
+            return triangulate_2d_with_cell_data(dataset)
         elseif _dim == 3
-            _func = :triangulate_3d_with_cell_data
+            return triangulate_3d_with_cell_data(dataset)
         else
             throw("Unsupported dimension.")
         end
     else
         if _dim == 2
-            _func = :triangulate_2d_no_cell_data
+            return triangulate_2d_no_cell_data(dataset)
         elseif _dim == 3
-            _func = :triangulate_3d_no_cell_data
+            return triangulate_3d_no_cell_data(dataset)
         else
             throw("Unsupported dimension.")
         end
     end
-
-    return @eval $(_func)($dataset)
 end
 
 function triangulate_2d_with_cell_data(dataset::VTKStructuredData)
@@ -30,7 +28,7 @@ function triangulate_2d_with_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -40,7 +38,7 @@ function triangulate_2d_with_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
 
     for m in keys(dataset.cell_data)
@@ -53,7 +51,7 @@ function triangulate_2d_with_cell_data(dataset::VTKStructuredData)
     end
 
     _cell_types = fill(5, 2*_num_of_cells)
-    for cind in product(1:cextents[1], 1:cextents[2])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
         push!(faces, [quad_cc[1], quad_cc[2], quad_cc[3]])
         push!(faces, [quad_cc[1], quad_cc[3], quad_cc[4]])
@@ -87,7 +85,7 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -97,13 +95,13 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
     for m in keys(dataset.cell_data)
         _cell_data[m] = Float64[]
     end
 
-    for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
         push!(faces, [hexa_cc[1], hexa_cc[2], hexa_cc[3]])
         push!(faces, [hexa_cc[1], hexa_cc[3], hexa_cc[4]])
@@ -250,7 +248,7 @@ function triangulate_2d_no_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -260,11 +258,11 @@ function triangulate_2d_no_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
 
     _cell_types = fill(5, 2*_num_of_cells)
-    for cind in product(1:cextents[1], 1:cextents[2])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
         push!(faces, [quad_cc[1], quad_cc[2], quad_cc[3]])
         push!(faces, [quad_cc[1], quad_cc[3], quad_cc[4]])
@@ -279,7 +277,7 @@ function triangulate_3d_no_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -289,10 +287,10 @@ function triangulate_3d_no_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
 
-    for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
         push!(faces, [hexa_cc[1], hexa_cc[2], hexa_cc[3]])
         push!(faces, [hexa_cc[1], hexa_cc[3], hexa_cc[4]])

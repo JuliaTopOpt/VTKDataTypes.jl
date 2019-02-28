@@ -1,19 +1,16 @@
-import Base.convert
+VTKMultiblockData(dataset::AbstractVTKSimpleData) = VTKMultiblockData(AbstractStaticVTKData[dataset])
 
-convert{T<:AbstractVTKData}(::Type{T}, dataset::T) = dataset
-
-convert(::Type{VTKMultiblockData}, dataset::AbstractVTKSimpleData) = VTKMultiblockData(AbstractStaticVTKData[dataset])
-
-function convert(::Type{VTKRectilinearData}, dataset::VTKUniformRectilinearData)
+function VTKRectilinearData(dataset::VTKUniformRectilinearData)
     _extents = extents(dataset)
     _dim = dim(dataset)
-    point_coords = [[dataset.origin[j] + (i-1)*dataset.spacing[j] for i in 1:_extents[j]] for j in 1:_dim]
+    point_coords = ntuple(j -> [dataset.origin[j] + (i-1)*dataset.spacing[j] for i in 1:_extents[j]], Val(_dim))
     return VTKRectilinearData(point_coords, dataset.point_data, dataset.cell_data)
 end
 
-convert(::Type{VTKStructuredData}, dataset::VTKUniformRectilinearData) = VTKStructuredData(VTKRectilinearData(dataset))
-
-function convert(::Type{VTKStructuredData}, dataset::VTKRectilinearData)
+function VTKStructuredData(dataset::VTKUniformRectilinearData)
+    return VTKStructuredData(VTKRectilinearData(dataset))
+end
+function VTKStructuredData(dataset::VTKRectilinearData)
     if dim(dataset) == 2
         xcoord = dataset.point_coords[1]
         ycoord = dataset.point_coords[2]
@@ -37,12 +34,12 @@ function convert(::Type{VTKStructuredData}, dataset::VTKRectilinearData)
     return VTKStructuredData(point_coords, dataset.point_data, dataset.cell_data)
 end
 
-function convert(::Type{VTKUnstructuredData}, dataset::VTKPolyData)
+function VTKUnstructuredData(dataset::VTKPolyData)
     return VTKUnstructuredData(dataset.point_coords, dataset.cell_types, 
         dataset.cell_connectivity, dataset.point_data, dataset.cell_data)
 end
 
-function convert{T<:AbstractVTKStructuredData}(::Type{VTKUnstructuredData}, dataset::T)
+function VTKUnstructuredData(dataset::T) where {T<:AbstractVTKStructuredData}
     point_coords = zeros(dim(dataset), num_of_points(dataset))
     if T <: VTKStructuredData
         point_coords = unstructured_point_coords_from_structured(dataset)
@@ -51,13 +48,12 @@ function convert{T<:AbstractVTKStructuredData}(::Type{VTKUnstructuredData}, data
     elseif T <: VTKUniformRectilinearData
         point_coords = unstructured_point_coords_from_uniform_rectilinear(dataset)
     end
-
     point_data = unstructured_point_data_from_structured(dataset)
     cell_types, _cell_connectivity, cell_data = unstructured_cell_info_from_structured(dataset)
     return VTKUnstructuredData(point_coords, cell_types, _cell_connectivity, point_data, cell_data)
 end
 
-function convert(::Type{VTKUnstructuredData}, data_blocks::VTKMultiblockData)
+function VTKUnstructuredData(data_blocks::VTKMultiblockData)
     combined_block = VTKUnstructuredData(deepcopy(data_blocks[1]))
     for block in data_blocks[2:end]
         append!(combined_block, VTKUnstructuredData(block))
@@ -65,27 +61,27 @@ function convert(::Type{VTKUnstructuredData}, data_blocks::VTKMultiblockData)
     return combined_block
 end
 
-convert(::Type{VTKPolyData}, dataset::AbstractStaticVTKData) = 
-    decompose(VTKUnstructuredData(dataset), "Faces", true)
-
+function VTKPolyData(dataset::AbstractStaticVTKData)
+    return decompose(VTKUnstructuredData(dataset), "Faces", true)
+end
 function unstructured_point_data_from_structured(dataset::AbstractVTKStructuredData)
     _num_of_points = num_of_points(dataset)
     _dim = dim(dataset)
     _extents = extents(dataset)
 
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
-            point_data[m] = reshape(dataset.point_data[m], (num_of_points(dataset),))
+            point_data[m] = reshape(dataset.point_data[m], (_num_of_points,))
         else
-            point_data[m] = reshape(dataset.point_data[m], (_var_dim, num_of_points(dataset)))
+            point_data[m] = reshape(dataset.point_data[m], (_var_dim, _num_of_points))
         end
     end
     point_data
 end
 
-function unstructured_cell_info_from_structured{T<:AbstractVTKStructuredData}(dataset::T)
+function unstructured_cell_info_from_structured(dataset::T) where {T<:AbstractVTKStructuredData}
     _num_of_cells = num_of_cells(dataset)
     _dim = dim(dataset)
     pextents = extents(dataset)
@@ -108,7 +104,7 @@ function unstructured_cell_info_from_structured{T<:AbstractVTKStructuredData}(da
         _cell_connectivity = reshape(map(local_cell_connectivity, ((i,j,k) for k in 1:cextents[3], j in 1:cextents[2], i in 1:cextents[1])), (_num_of_cells,))
     end
 
-    cell_data = Dict{String, Array{Float64}}()
+    cell_data = empty(dataset.cell_data)
     for m in keys(dataset.cell_data)
         _var_dim = var_dim(dataset, m, "Cell")
         if _var_dim == 1
@@ -117,7 +113,7 @@ function unstructured_cell_info_from_structured{T<:AbstractVTKStructuredData}(da
             cell_data[m] = reshape(dataset.cell_data[m], (_var_dim, num_of_cells(dataset)))
         end
     end
-    cell_types, _cell_connectivity, cell_data
+    return cell_types, _cell_connectivity, cell_data
 end
 
 function unstructured_point_coords_from_structured(dataset::VTKStructuredData)

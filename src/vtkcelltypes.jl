@@ -1,5 +1,4 @@
-
-VTK_CELL_TYPE = Dict(
+const VTK_CELL_TYPE = Dict(
     0=>WriteVTK.VTKCellTypes.VTK_EMPTY_CELL,
     1=>WriteVTK.VTKCellTypes.VTK_VERTEX, 
     2=>WriteVTK.VTKCellTypes.VTK_POLY_VERTEX, 
@@ -50,15 +49,15 @@ VTK_CELL_TYPE = Dict(
     66=>WriteVTK.VTKCellTypes.VTK_HIGHER_ORDER_PYRAMID,
     67=>WriteVTK.VTKCellTypes.VTK_HIGHER_ORDER_HEXAHEDRON)
 
-POINT_CELLS = Int[1, 2, 41]
-LINE_CELLS = Int[3, 4, 21, 35, 51, 60]
-FACE_CELLS = Int[5, 6, 7, 8, 9, 22, 23, 28, 30, 34, 36, 52, 53, 54, 61, 62, 63]
-VOLUME_CELLS = Int[10, 11, 12, 13, 14, 15, 16, 24, 25, 26, 27, 29, 31, 32, 33, 42, 55, 56, 64, 65, 66, 67]
-POLY_CELLS = Int[1, 2, 3, 4, 5, 6, 7, 8, 9]
+const POINT_CELLS = Int[1, 2, 41]
+const LINE_CELLS = Int[3, 4, 21, 35, 51, 60]
+const FACE_CELLS = Int[5, 6, 7, 8, 9, 22, 23, 28, 30, 34, 36, 52, 53, 54, 61, 62, 63]
+const VOLUME_CELLS = Int[10, 11, 12, 13, 14, 15, 16, 24, 25, 26, 27, 29, 31, 32, 33, 42, 55, 56, 64, 65, 66, 67]
+const POLY_CELLS = Int[1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-LINEAR_CELLS = [0:16...]
-QUADRATIC_CELLS = [21:34...; 36]
-CUBIC_CELLS = [35]
-HIGHER_ORDER_CELLS = [60:67...]
-HIGHER_ORDER_PARAMETRIC_CELLS = [51:56...]
-SPECIAL_CELLS = [41, 42]
+const LINEAR_CELLS = [0:16...]
+const QUADRATIC_CELLS = [21:34...; 36]
+const CUBIC_CELLS = [35]
+const HIGHER_ORDER_CELLS = [60:67...]
+const HIGHER_ORDER_PARAMETRIC_CELLS = [51:56...]
+const SPECIAL_CELLS = [41, 42]

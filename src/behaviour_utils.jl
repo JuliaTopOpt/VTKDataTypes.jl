@@ -1,32 +1,38 @@
-
 function filter_cells!(dataset::AbstractVTKUnstructuredData, cell_types_to_remove::Vector{Int})
-    _num_of_cells = num_of_cells(dataset)
-    dataset.cell_types = dataset.cell_types[[i for i in 1:_num_of_cells if cell_type(dataset, i)∉cell_types_to_remove]]
-    dataset.cell_connectivity = dataset.cell_connectivity[[i for i in 1:_num_of_cells if cell_type(dataset, i)∉cell_types_to_remove]]
-
+    inds = findall(i -> i in cell_types_to_remove, dataset.cell_types)
+    deleteat!(dataset.cell_types, inds)
+    deleteat!(dataset.cell_connectivity, inds)
     for m in keys(dataset.cell_data)
         _var_dim = var_dim(dataset, m, "Cell")
         if _var_dim == 1
-            dataset.cell_data[m] = dataset.cell_data[m][[i for i in 1:_num_of_cells if cell_type(dataset, i)∉cell_types_to_remove]]
+            deleteat!(dataset.cell_data[m], inds)
         else
-            dataset.cell_data[m] = dataset.cell_data[m][:,[i for i in 1:_num_of_cells if cell_type(dataset, i)∉cell_types_to_remove]]
+            dataset.cell_data[m] = dataset.cell_data[m][:,setdiff(1:num_of_cells(dataset), inds)]
         end
     end
+    return dataset
 end
 
-keep_volume_cells_only!(dataset::VTKUnstructuredData) = filter_cells!(dataset, [POINT_CELLS; LINE_CELLS; FACE_CELLS])
-keep_face_cells_only!(dataset::VTKPolyData)= filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
-
-function add_new_cell!(dataset::AbstractVTKUnstructuredData, _cell_type::Int, _cell_connectivity::Vector{Int}, _filter::Bool=true)
-    T = typeof(dataset)
+function keep_volume_cells_only!(dataset::VTKUnstructuredData)
+    return filter_cells!(dataset, [POINT_CELLS; LINE_CELLS; FACE_CELLS])
+end
+function keep_face_cells_only!(dataset::VTKPolyData)
+    return filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
+end
+function add_new_cell!( dataset::AbstractVTKUnstructuredData, 
+                        _cell_type::Int, 
+                        _cell_connectivity, 
+                        _filter::Bool = true
+                      )
+    TData = typeof(dataset)
     begin
-        _out = true
+        out = true
         for i in 1:length(dataset.cell_connectivity)
-            (_out = !similar_cells(dataset.cell_connectivity[i], cell_type(dataset, i), 
+            (out = !similar_cells(dataset.cell_connectivity[i], cell_type(dataset, i), 
                 _cell_connectivity, _cell_type)) || break
         end
-        _out
-    end || _filter && (return num_of_cells(dataset)) || throw("$T: Repeat cells are not allowed.")
+        out
+    end || _filter && (return num_of_cells(dataset)) || throw("$(TData): Repeat cells are not allowed.")
 
     push!(dataset.cell_connectivity, _cell_connectivity)
     push!(dataset.cell_types, _cell_type)
@@ -47,16 +53,21 @@ function remove_cell!(dataset::AbstractVTKUnstructuredData, cell_ind::Int)
     for m in keys(dataset.cell_data)
         _var_dim = var_dim(dataset, m, "Cell")
         if _var_dim == 1
-            dataset.cell_data[m] = [dataset.cell_data[m][1:cell_ind-1]; dataset.cell_data[m][cell_ind+1:end]]
+            dataset.cell_data[m] = vcat(dataset.cell_data[m][1:cell_ind-1], 
+                                            dataset.cell_data[m][cell_ind+1:end])
         else
-            dataset.cell_data[m] = [dataset.cell_data[m][:, 1:cell_ind-1] dataset.cell_data[m][:, cell_ind+1:end]]
+            dataset.cell_data[m] = hcat(dataset.cell_data[m][:, 1:cell_ind-1], 
+                                            dataset.cell_data[m][:, cell_ind+1:end])
         end
     end
     return num_of_cells(dataset)
 end
 
-function add_point_id_offset!(_cell_connectivity::Vector{Vector{Int}}, offset::Int)
-    [_cell_connectivity[i] = _cell_connectivity[i] .+ offset for i in 1:length(_cell_connectivity)]; _cell_connectivity
+function add_point_id_offset!(cell_connectivity::Vector, offset::Int)
+    for i in 1:length(cell_connectivity)
+        cell_connectivity[i] = cell_connectivity[i] .+ offset
+    end
+    return cell_connectivity
 end
 
 function append(datasets::AbstractVTKUnstructuredData...)
@@ -69,23 +80,29 @@ end
 
 insert_new_block!(dataset::AbstractVTKMultiblockData, block) = push!(dataset.blocks, block)
 remove_block!(dataset::AbstractVTKMultiblockData, ind::Int) = deleteat!(dataset.blocks, ind)
-remove_block!(dataset::AbstractVTKMultiblockData, block::AbstractVTKMultiblockData) = deleteat!(dataset.blocks, findin(dataset.blocks, block))
-
-function insert_timed_data!{T<:Real, S<:AbstractStaticVTKData}(dataset::VTKTimeSeriesData{T, S}, _time::T, data::S)
-    loc = searchsorted(dataset.timemarkers, _time)
+function remove_block!(dataset::AbstractVTKMultiblockData, block::AbstractVTKMultiblockData)
+    return deleteat!(dataset.blocks, findin(dataset.blocks, block))
+end
+function insert_timed_data!(dataset::VTKTimeSeriesData{TTime, TData}, 
+                            time::TTime, 
+                            data::TData
+                           ) where {TTime<:Real, TData<:AbstractStaticVTKData}
+    loc = searchsorted(dataset.timemarkers, time)
     if loc.start == length(dataset) + 1 && loc.stop == length(dataset)
-        push!(dataset.timemarkers, _time)
+        push!(dataset.timemarkers, time)
         push!(dataset.data, data)
     elseif loc.start == 1 && loc.stop == 0
-        unshift!(dataset.timemarkers, _time)
+        unshift!(dataset.timemarkers, time)
         unshift!(dataset.data, data)
     else
-        insert!(dataset.timemarkers, loc.start, _time)
+        insert!(dataset.timemarkers, loc.start, time)
         insert!(dataset.data, loc.start, data)
     end
 end
 
-function remove_timed_data!{T<:Real, S<:AbstractStaticVTKData}(dataset::VTKTimeSeriesData{T,S}, _time::T)
+function remove_timed_data!(dataset::VTKTimeSeriesData{TTime, TData}, 
+                            _time::TTime
+                           ) where {TTime<:Real, TData<:AbstractStaticVTKData}
     ind = findin(dataset.timemarkers, _time)
     if typeof(ind) == Int
         deleteat!(dataset.timemarkers, ind)
@@ -127,7 +144,7 @@ end
     end
 end
 
-function dim3!{S<:Real}(a::AbstractVTKUnstructuredData{S})
+function dim3!(a::AbstractVTKUnstructuredData)
     if dim(a) == 3
         return
     elseif dim(a) == 2
@@ -138,7 +155,7 @@ function dim3!{S<:Real}(a::AbstractVTKUnstructuredData{S})
     end
 end
 
-function dim3!{S<:Real}(a::VTKUniformRectilinearData{S})
+function dim3!(a::VTKUniformRectilinearData)
     if dim(a) == 3
         return
     elseif dim(a) == 2
@@ -158,7 +175,7 @@ function dim3!{S<:Real}(a::VTKUniformRectilinearData{S})
     end
 end
 
-function dim3!{S<:Real}(a::VTKRectilinearData{S})
+function dim3!(a::VTKRectilinearData)
     if dim(a) == 3
         return
     elseif dim(a) == 2
@@ -176,7 +193,7 @@ function dim3!{S<:Real}(a::VTKRectilinearData{S})
     end
 end
 
-function dim3!{S<:Real}(a::VTKStructuredData{S})
+function dim3!(a::VTKStructuredData)
     if dim(a) == 3
         return
     elseif dim(a) == 2
@@ -194,7 +211,7 @@ function dim3!{S<:Real}(a::VTKStructuredData{S})
     end
 end
 
-function dim3!{S<:Real}(a::VTKMultiblockData{S})
+function dim3!(a::VTKMultiblockData)
     if dim(a) == 3
         return
     elseif dim(a) == 2
@@ -207,7 +224,7 @@ function dim3!{S<:Real}(a::VTKMultiblockData{S})
     end
 end
 
-function dim3!{S, T<:AbstractStaticVTKData}(a::VTKTimeSeriesData{S,T})
+function dim3!(a::VTKTimeSeriesData)
     if dim(a) == 3
         return
     elseif dim(a) == 2
@@ -241,7 +258,7 @@ function celldata_to_pointdata!(dataset::AbstractVTKUnstructuredData)
             if _var_dim == 1
                 point_data[m][j] += dataset.cell_data[m][i]
             else
-                point_data[m][:,j] += dataset.cell_data[m][:,i]
+                @views point_data[m][:,j] += dataset.cell_data[m][:,i]
             end
         end
     end
@@ -254,8 +271,7 @@ function celldata_to_pointdata!(dataset::AbstractVTKUnstructuredData)
             point_data[m] = point_data[m] ./ max.(point_counter', 1)
         end
     end
-    dataset.cell_data = Dict{String, Array{Float64}}()
+    empty!(dataset.cell_data)
 
     return
 end
-

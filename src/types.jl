@@ -1,201 +1,186 @@
 abstract type AbstractVTKData end
 
-abstract type AbstractStaticVTKData{T} <: AbstractVTKData end
-abstract type AbstractTimeSeriesVTKData{S, T} <: AbstractVTKData end
+abstract type AbstractStaticVTKData <: AbstractVTKData end
+abstract type AbstractTimeSeriesVTKData{TTime, TData} <: AbstractVTKData end
 
-abstract type AbstractVTKSimpleData{T} <: AbstractStaticVTKData{T} end
+abstract type AbstractVTKSimpleData <: AbstractStaticVTKData end
 #abstract AbstractVTKAMRData <: AbstractStaticVTKData
-abstract type AbstractVTKMultiblockData{T} <: AbstractStaticVTKData{T} end
+abstract type AbstractVTKMultiblockData <: AbstractStaticVTKData end
 
-abstract type AbstractVTKUnstructuredData{T} <: AbstractVTKSimpleData{T} end
-abstract type AbstractVTKStructuredData{T} <: AbstractVTKSimpleData{T} end
-abstract type AbstractVTKRectilinearData{T} <: AbstractVTKStructuredData{T} end
+abstract type AbstractVTKUnstructuredData <: AbstractVTKSimpleData end
+abstract type AbstractVTKStructuredData <: AbstractVTKSimpleData end
+abstract type AbstractVTKRectilinearData <: AbstractVTKStructuredData end
 
-type VTKUnstructuredData{T} <: AbstractVTKUnstructuredData{T}
-    point_coords::Matrix{T}
+mutable struct VTKUnstructuredData{TCoord, TConnect, TPointData, TCellData} <: AbstractVTKUnstructuredData
+    point_coords::Matrix{TCoord}
     cell_types::Vector{Int}
-    cell_connectivity::Vector{Vector{Int}}
-    point_data::Dict{String, Array{T}}
-    cell_data::Dict{String, Array{T}}
-
-    function VTKUnstructuredData{T}(point_coords, cell_types, cell_connectivity, point_data, cell_data, validate=false) where T
-        dataset = new(point_coords, cell_types, cell_connectivity, point_data, cell_data)
-        if validate
-            valid, _error = is_valid(dataset)
-            valid ? (return dataset) : throw(_error)
-        end
-        dataset
+    cell_connectivity::Vector{TConnect}
+    point_data::Dict{String, TPointData}
+    cell_data::Dict{String, TCellData}
+end
+function VTKUnstructuredData(   point_coords, 
+                                cell_types, 
+                                cell_connectivity, 
+                                point_data, 
+                                cell_data, 
+                                validate
+                            ) where T
+    dataset = VTKUnstructuredData(  point_coords, 
+                                    cell_types, 
+                                    cell_connectivity, 
+                                    point_data, 
+                                    cell_data
+                                )
+    if validate
+        valid, _error = is_valid(dataset)
+        valid ? (return dataset) : throw(_error)
     end
+    return dataset
 end
 
-function VTKUnstructuredData{T1, T2, T3}(point_coords::Matrix{T1}, cell_types::Vector{Int},
-    cell_connectivity::Vector{Vector{Int}}, point_data::Dict{String, Array{T2}}, 
-    cell_data::Dict{String, Array{T3}}, validate=false)
+function VTKUnstructuredData(   point_coords, 
+                                cell_types = Int[], 
+                                cell_connectivity = Vector{Int}[], 
+                                validate = false
+                            )
     
-    T = promote_type(T1, T2, T3)
-    if T <: Integer
-        T = Float64
-    end
-    VTKUnstructuredData{T}(point_coords, cell_types, cell_connectivity, point_data, cell_data, validate)
+    point_data = Dict{String, Array}()
+    cell_data = Dict{String, Array}()    
+    return VTKUnstructuredData( point_coords, 
+                                cell_types, 
+                                cell_connectivity, 
+                                point_data, 
+                                cell_data, 
+                                validate
+                              )
 end
 
-function VTKUnstructuredData{_T}(point_coords::Matrix{_T}, cell_types::Vector{Int}=Int[],
-    cell_connectivity::Vector{Vector{Int}}=[Int[]], validate=false)
-    
-    T = _T
-    if T <: Integer
-        T = Float64
-    end
-    point_data = Dict{String, Array{T}}()
-    cell_data = Dict{String, Array{T}}()
-    
-    VTKUnstructuredData{T}(point_coords, cell_types, cell_connectivity, point_data, cell_data, validate)
-end
-
-type VTKPolyData{T} <: AbstractVTKUnstructuredData{T}
-    point_coords::Matrix{T}
+mutable struct VTKPolyData{TCoord, TConnect, TPointData, TCellData} <: AbstractVTKUnstructuredData
+    point_coords::Matrix{TCoord}
     cell_types::Vector{Int}
-    cell_connectivity::Vector{Vector{Int}}
-    point_data::Dict{String, Array{T}}
-    cell_data::Dict{String, Array{T}}
-
-    function VTKPolyData{T}(point_coords, cell_types, cell_connectivity, point_data, cell_data, validate=false) where T
-        dataset = new(point_coords, cell_types, cell_connectivity, point_data, cell_data)
-        if validate
-            valid, _error = is_valid(dataset)
-            valid ? (return dataset) : throw(_error)
-        end
-        dataset
-    end
+    cell_connectivity::Vector{TConnect}
+    point_data::Dict{String, TPointData}
+    cell_data::Dict{String, TCellData}
 end
-function VTKPolyData{T1, T2, T3}(point_coords::Matrix{T1}, cell_types::Vector{Int},
-    cell_connectivity::Vector{Vector{Int}}, point_data::Dict{String, Array{T2}}, cell_data::Dict{String, Array{T3}}, validate=false)
-    
-    T = promote_type(T1, T2, T3)
-    if T <: Integer
-        T = Float64
+function VTKPolyData(   point_coords, 
+                        cell_types, 
+                        cell_connectivity, 
+                        point_data, 
+                        cell_data, 
+                        validate
+                    )
+    dataset = VTKPolyData(  point_coords, 
+                            cell_types, 
+                            cell_connectivity, 
+                            point_data, 
+                            cell_data
+                        )
+    if validate
+        valid, _error = is_valid(dataset)
+        valid ? (return dataset) : throw(_error)
     end
-
-    VTKPolyData{T}(point_coords, cell_types, cell_connectivity, point_data, cell_data, validate)
-end
-function VTKPolyData{_T}(point_coords::Matrix{_T}, cell_types::Vector{Int}=Int[],
-    cell_connectivity::Vector{Vector{Int}}=[Int[]], validate=false)
-
-    T = _T
-    if T <: Integer
-        T = Float64
-    end
-    point_data = Dict{String, Array{T}}()
-    cell_data = Dict{String, Array{T}}()
-    VTKPolyData{T}(point_coords, cell_types, cell_connectivity, point_data, cell_data, dataset)
+    return dataset
 end
 
-type VTKStructuredData{T} <: AbstractVTKStructuredData{T}
-    point_coords::Array{T}
-    point_data::Dict{String, Array{T}}
-    cell_data::Dict{String, Array{T}}
+function VTKPolyData(   point_coords, 
+                        cell_types = Int[], 
+                        cell_connectivity = Vector{Int}[], 
+                        validate::Bool = false
+                    )
 
-    function VTKStructuredData{T}(point_coords, point_data, cell_data, validate=false) where T
-        dataset = new(point_coords, point_data, cell_data)
-        if validate
-            valid, _error = is_valid(dataset)
-            valid ? (return dataset) : throw(_error)
-        end
-        dataset
-    end
-end
-function VTKStructuredData{T1, N, T2, T3}(point_coords::Array{T1,N}, 
-    point_data::Dict{String, Array{T2}}, cell_data::Dict{String, Array{T3}}, 
-    validate=false)
-
-    T = promote_type(T1, T2, T3)
-    if T <: Integer
-        T = Float64
-    end
-
-    VTKStructuredData{T}(point_coords, point_data, cell_data, validate)
-end
-function VTKStructuredData{_T}(point_coords::Array{_T}, validate=false)
-    T = _T
-    if T <: Integer
-        T = Float64
-    end
-    point_data = Dict{String, Array{T}}()
-    cell_data = Dict{String, Array{T}}()
-    VTKStructuredData{T}(point_coords, point_data, cell_data, validate)
+    point_data = Dict{String, Array}()
+    cell_data = Dict{String, Array}()
+    return VTKPolyData( point_coords, 
+                        cell_types, 
+                        cell_connectivity, 
+                        point_data, 
+                        cell_data, 
+                        validate
+                      )
 end
 
-type VTKRectilinearData{T} <: AbstractVTKRectilinearData{T}
-    point_coords::Vector{Vector{T}}
-    point_data::Dict{String, Array{T}}
-    cell_data::Dict{String, Array{T}}
-
-    function VTKRectilinearData{T}(point_coords, point_data, cell_data, validate=false) where T
-        dataset = new(point_coords, point_data, cell_data)
-        if validate
-            valid, _error = is_valid(dataset)
-            valid ? (return dataset) : throw(_error)
-        end
-        dataset
-    end
+mutable struct VTKStructuredData{TCoord, TArray <: Array{TCoord}, TPointData, TCellData} <: AbstractVTKStructuredData
+    point_coords::TArray
+    point_data::Dict{String, TPointData}
+    cell_data::Dict{String, TCellData}
 end
-function VTKRectilinearData{T1, T2, T3}(point_coords::Vector{Vector{T1}}, 
-    point_data::Dict{String, Array{T2}}, cell_data::Dict{String, Array{T3}}, 
-    validate=false)
-    
-    T = promote_type(T1, T2, T3)
-    if T <: Integer
-        T = Float64
+function VTKStructuredData( point_coords, 
+                            point_data, 
+                            cell_data, 
+                            validate::Bool
+                          )
+    dataset = VTKStructuredData(point_coords, point_data, cell_data)
+    if validate
+        valid, _error = is_valid(dataset)
+        valid ? (return dataset) : throw(_error)
     end
-
-    VTKRectilinearData{T}(point_coords, point_data, cell_data, validate)
+    return dataset
 end
-function VTKRectilinearData{_T}(point_coords::Vector{Vector{_T}}, validate=false)
-    T = _T
-    if T <: Integer
-        T = Float64
-    end
-    point_data = Dict{String, Array{T}}()
-    cell_data = Dict{String, Array{T}}()
-    
-    VTKRectilinearData{T}(point_coords, point_data, cell_data, validate)
+function VTKStructuredData(point_coords, validate::Bool)
+    point_data = Dict{String, Array}()
+    cell_data = Dict{String, Array}()
+    return VTKStructuredData(point_coords, point_data, cell_data, validate)
 end
 
-type VTKUniformRectilinearData{T} <: AbstractVTKRectilinearData{T}
-    origin::Vector{T}
-    spacing::Vector{T}
-    extents::Vector{Int}
-    point_data::Dict{String, Array{T}}
-    cell_data::Dict{String, Array{T}}
-
-    function VTKUniformRectilinearData{T}(origin, spacing, extents, point_data, cell_data, validate=false) where T
-        dataset = new(origin, spacing, extents, point_data, cell_data)
-        if validate
-            valid, _error = is_valid(dataset)
-            valid ? (return dataset) : throw(_error)
-        end
-        dataset
-    end
+mutable struct VTKRectilinearData{TCoord, N, TPointData, TCellData} <: AbstractVTKRectilinearData
+    point_coords::NTuple{N, Vector{TCoord}}
+    point_data::Dict{String, TPointData}
+    cell_data::Dict{String, TCellData}
 end
-function VTKUniformRectilinearData{T1, T2, T3, T4}(origin::Vector{T1}, 
-    spacing::Vector{T2}, extents::Vector{Int}, point_data::Dict{String, Array{T3}}, 
-    cell_data::Dict{String, Array{T4}}, validate=false)
-    
-    T = promote_type(T1, T2, T3, T4)
-    if T <: Integer
-        T = Float64
+function VTKRectilinearData(point_coords, point_data, cell_data, validate)
+    dataset = VTKRectilinearData(point_coords, point_data, cell_data)
+    if validate
+        valid, _error = is_valid(dataset)
+        valid ? (return dataset) : throw(_error)
     end
-
-    VTKUniformRectilinearData{T}(origin, spacing, extents, point_data, cell_data, validate)
+    return dataset
 end
-function VTKUniformRectilinearData{T1, T2}(origin::Vector{T1}, spacing::Vector{T2}, extents::Vector{Int}, validate=false)
-    T = promote_type(T1, T2)
-    if T <: Integer
-        T = Float64
+function VTKRectilinearData(point_coords, validate::Bool = false)
+    point_data = Dict{String, Array}()
+    cell_data = Dict{String, Array}()    
+    VTKRectilinearData(point_coords, point_data, cell_data, validate)
+end
+
+mutable struct VTKUniformRectilinearData{TCoord, N, TPointData, TCellData} <: AbstractVTKRectilinearData
+    origin::NTuple{N, TCoord}
+    spacing::NTuple{N, TCoord}
+    extents::NTuple{N, Int}
+    point_data::Dict{String, TPointData}
+    cell_data::Dict{String, TCellData}
+end
+function VTKUniformRectilinearData( origin, 
+                                    spacing, 
+                                    extents, 
+                                    point_data, 
+                                    cell_data, 
+                                    validate::Bool
+                                  )
+    dataset = VTKUniformRectilinearData(origin, 
+                                        spacing, 
+                                        extents, 
+                                        point_data, 
+                                        cell_data
+                                       )
+    if validate
+        valid, _error = is_valid(dataset)
+        valid ? (return dataset) : throw(_error)
     end
-    point_data = Dict{String, Array{T}}()
-    cell_data = Dict{String, Array{T}}()
-    VTKUniformRectilinearData{T}(origin, spacing, extents, point_data, cell_data, validate)
+    return dataset
+end
+function VTKUniformRectilinearData( origin, 
+                                    spacing, 
+                                    extents, 
+                                    validate::Bool = false
+                                  )
+    point_data = Dict{String, Array}()
+    cell_data = Dict{String, Array}()
+    return VTKUniformRectilinearData(   origin, 
+                                        spacing, 
+                                        extents, 
+                                        point_data, 
+                                        cell_data, 
+                                        validate
+                                    )
 end
 const VTKImageData = VTKUniformRectilinearData
 
@@ -207,25 +192,19 @@ type VTKBergerOligerAMRData <: AbstractVTKAMRData
 end
 =#
 
-type VTKMultiblockData{T} <: AbstractVTKMultiblockData{T}
-    blocks::Vector{AbstractStaticVTKData{T}}
+mutable struct VTKMultiblockData{N, TBlocks <: Tuple{Vararg{AbstractStaticVTKData, N}}} <: AbstractVTKMultiblockData
+    blocks::TBlocks
 end
-VTKMultiblockData{S, T<:AbstractStaticVTKData{S}}(blocks::Vector{T}) = VTKMultiblockData{S}(AbstractStaticVTKData{S}.(blocks))
 
-type VTKTimeSeriesData{S, T<:AbstractStaticVTKData} <: AbstractTimeSeriesVTKData{S, T}
-    timemarkers::Vector{S}
-    data::Vector{T}
-
-    function VTKTimeSeriesData{S, T}(timemarkers, data, validate=false) where {S, T<:AbstractStaticVTKData}
-        dataset = new(timemarkers, data)
-        if validate
-            valid, _error = is_valid(dataset)
-            valid ? (return dataset) : throw(_error)
-        end
-        dataset
+mutable struct VTKTimeSeriesData{TTime, TData <: AbstractStaticVTKData} <: AbstractTimeSeriesVTKData{TTime, TData}
+    timemarkers::Vector{TTime}
+    data::Vector{TData}
+end
+function VTKTimeSeriesData(timemarkers, data, validate)
+    dataset = VTKTimeSeriesData(timemarkers, data)
+    if validate
+        valid, _error = is_valid(dataset)
+        valid ? (return dataset) : throw(_error)
     end
-end
-function VTKTimeSeriesData{S, T<:AbstractStaticVTKData}(timemarkers::Vector{S}, data::Vector{T}, validate=false)
-    _S = S <: Integer ? Float64 : S
-    return VTKTimeSeriesData{_S, T}(timemarkers, data)
+    return dataset
 end

@@ -1,21 +1,21 @@
-function decompose(_dataset::AbstractVTKStructuredData, target::String="Faces", decompose_cell_data=false)
+function decompose(_dataset::AbstractVTKStructuredData, target::String = "Faces", decompose_cell_data = false)
     dataset = VTKStructuredData(_dataset)
     _dim = dim(dataset)
 
     if decompose_cell_data
         if target == "Faces"
             if _dim == 2
-                _func = :decompose_to_faces_2d_with_cell_data
+                return decompose_to_faces_2d_with_cell_data(dataset)
             elseif _dim == 3
-                _func = :decompose_to_faces_3d_with_cell_data
+                return decompose_to_faces_3d_with_cell_data(dataset)
             else
                 throw("Unsupported dimension.")
             end
         elseif target == "Lines"
             if _dim == 2
-                _func = :decompose_to_lines_2d_with_cell_data
+                return decompose_to_lines_2d_with_cell_data(dataset)
             elseif _dim == 3
-                _func = :decompose_to_lines_3d_with_cell_data
+                return decompose_to_lines_3d_with_cell_data(dataset)
             else
                 throw("Unsupported dimension.")
             end
@@ -25,17 +25,17 @@ function decompose(_dataset::AbstractVTKStructuredData, target::String="Faces", 
     else
         if target == "Faces"
             if _dim == 2
-                _func = :decompose_to_faces_2d_no_cell_data
+                return decompose_to_faces_2d_no_cell_data(dataset)
             elseif _dim == 3
-                _func = :decompose_to_faces_3d_no_cell_data
+                return decompose_to_faces_3d_no_cell_data(dataset)
             else
                 throw("Unsupported dimension.")
             end
         elseif target == "Lines"
             if _dim == 2
-                _func = :decompose_to_lines_2d_no_cell_data
+                return decompose_to_lines_2d_no_cell_data(dataset)
             elseif _dim == 3
-                _func = :decompose_to_lines_3d_no_cell_data
+                return decompose_to_lines_3d_no_cell_data(dataset)
             else
                 throw("Unsupported dimension.")
             end
@@ -43,8 +43,6 @@ function decompose(_dataset::AbstractVTKStructuredData, target::String="Faces", 
             throw("Unsupported target.")
         end
     end
-
-    return @eval $(_func)($dataset)
 end
 
 function decompose_to_faces_2d_with_cell_data(dataset::VTKStructuredData)
@@ -54,7 +52,7 @@ function decompose_to_faces_2d_with_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -64,10 +62,10 @@ function decompose_to_faces_2d_with_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
     _cell_types = fill(9, _num_of_cells)
-    for cind in product(1:cextents[1], 1:cextents[2])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         push!(faces, cell_connectivity(dataset, cind))
     end
     for m in keys(dataset.cell_data)
@@ -87,7 +85,7 @@ function decompose_to_faces_3d_with_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -97,13 +95,13 @@ function decompose_to_faces_3d_with_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
     for m in keys(dataset.cell_data)
         _cell_data[m] = Float64[]
     end
 
-    for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
         push!(faces, [hexa_cc[1], hexa_cc[2], hexa_cc[3], hexa_cc[4]])
         for m in keys(dataset.cell_data)
@@ -230,7 +228,7 @@ function decompose_to_lines_2d_with_cell_data(dataset::VTKStructuredData)
     _num_of_points = num_of_points(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -240,12 +238,12 @@ function decompose_to_lines_2d_with_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     lines = Vector{Int}[]
     for m in keys(dataset.cell_data)
         _cell_data[m] = Float64[]
     end
-    for cind in product(1:cextents[1], 1:cextents[2])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
 
         push!(lines, [quad_cc[1], quad_cc[2]])
@@ -338,7 +336,7 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
     _num_of_points = num_of_points(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -348,13 +346,13 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     lines = Vector{Int}[]
     for m in keys(dataset.cell_data)
         _cell_data[m] = Float64[]
     end
 
-    for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
         push!(lines, [hexa_cc[1], hexa_cc[2]])
         for m in keys(dataset.cell_data)
@@ -693,7 +691,7 @@ function decompose_to_faces_2d_no_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -703,10 +701,10 @@ function decompose_to_faces_2d_no_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
     _cell_types = fill(9, _num_of_cells)
-    for cind in product(1:cextents[1], 1:cextents[2])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         push!(faces, cell_connectivity(dataset, cind))
     end
     return VTKPolyData(point_coords, _cell_types, faces, point_data, _cell_data)
@@ -718,7 +716,7 @@ function decompose_to_faces_3d_no_cell_data(dataset::VTKStructuredData)
     _dim = dim(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -728,10 +726,10 @@ function decompose_to_faces_3d_no_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
 
-    for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
         push!(faces, [hexa_cc[1], hexa_cc[2], hexa_cc[3], hexa_cc[4]])
         push!(faces, [hexa_cc[1], hexa_cc[2], hexa_cc[6], hexa_cc[5]])
@@ -756,7 +754,7 @@ function decompose_to_lines_2d_no_cell_data(dataset::VTKStructuredData)
     _num_of_points = num_of_points(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -766,10 +764,10 @@ function decompose_to_lines_2d_no_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     lines = Vector{Int}[]
 
-    for cind in product(1:cextents[1], 1:cextents[2])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
 
         push!(lines, [quad_cc[1], quad_cc[2]])
@@ -791,7 +789,7 @@ function decompose_to_lines_3d_no_cell_data(dataset::VTKStructuredData)
     _num_of_points = num_of_points(dataset)
 
     point_coords = reshape(dataset.point_coords, (_dim, _num_of_points))
-    point_data = Dict{String, Array{Float64}}()
+    point_data = empty(dataset.point_data)
     for m in keys(dataset.point_data)
         _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
@@ -801,10 +799,10 @@ function decompose_to_lines_3d_no_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_data = Dict{String, Array{Float64}}()
+    _cell_data = empty(dataset.cell_data)
     lines = Vector{Int}[]
 
-    for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
         push!(lines, [hexa_cc[1], hexa_cc[2]])
         push!(lines, [hexa_cc[1], hexa_cc[4]])

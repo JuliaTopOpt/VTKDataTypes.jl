@@ -1,5 +1,5 @@
 
-function triangulate_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{S})
+function triangulate_with_cell_data(dataset::AbstractVTKUnstructuredData)
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 
     point_coords = dataset.point_coords
@@ -8,7 +8,7 @@ function triangulate_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredDat
     #Sorted inds and cell type are keys
     #Cell connectivity, cell count, and cell data are the values
 
-    cell_register = Dict{Vector{Int}, Tuple{Vector{Int}, _Counter, Dict{String, Array{Float64}}}}()
+    cell_register = Dict{Vector{Int}, Tuple{Vector{Int}, _Counter, typeof(dataset.cell_data)}}()
     for i in 1:length(dataset.cell_connectivity)
         _cells = triangulate_cell(dataset.cell_connectivity[i], dataset.cell_types[i])
         for j in 1:length(_cells)
@@ -24,7 +24,7 @@ function triangulate_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredDat
                     end
                 end
             else
-                cell_register[_key] = (_cells[j], _Counter(1), Dict{String, Array{Float64}}())
+                cell_register[_key] = (_cells[j], _Counter(1), empty(dataset.cell_data))
                 for m in keys(dataset.cell_data)
                     _var_dim = var_dim(dataset, m, "Cell")
                     if _var_dim == 1
@@ -38,7 +38,7 @@ function triangulate_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredDat
     end
 
     ncells = length(cell_register)
-    cell_data = Dict{String, Array{Float64}}()
+    cell_data = empty(dataset.cell_data)
     _cell_connectivity = Vector{Int}[]
 
     for m in keys(dataset.cell_data)
@@ -69,7 +69,7 @@ function triangulate_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredDat
     return VTKPolyData(point_coords, _cell_types, _cell_connectivity, point_data, cell_data)
 end
 
-function triangulate_no_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{S})
+function triangulate_no_cell_data(dataset::AbstractVTKUnstructuredData)
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 
     point_coords = dataset.point_coords
@@ -89,7 +89,7 @@ function triangulate_no_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{
     end
 
     ncells = length(cell_register)
-    cell_data = Dict{String, Array{Float64}}()
+    cell_data = empty(dataset.cell_data)
     _cell_connectivity = Vector{Int}[]
 
     for (i, kv) in enumerate(cell_register)
@@ -108,4 +108,3 @@ function triangulate(dataset::AbstractVTKUnstructuredData, triangulate_cell_data
         return triangulate_no_cell_data(dataset)
     end
 end
-

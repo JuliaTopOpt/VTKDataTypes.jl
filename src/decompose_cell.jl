@@ -273,4 +273,3 @@ end
 function decompose_cell(dataset::AbstractStaticVTKData, cell_ind::Union{Int, Tuple{Int, Vararg{Int}}}; target::String="")
     decompose_cell(cell_connectivity(dataset, cell_ind), cell_type(dataset, cell_ind))
 end
-

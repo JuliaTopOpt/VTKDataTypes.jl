@@ -1,5 +1,8 @@
-function similar_cells(cell_connectivity1::Vector{Int}, cell_type1::Int, 
-    cell_connectivity2::Vector{Int}, cell_type2::Int)
+function similar_cells( cell_connectivity1::Vector{Int}, 
+                        cell_type1::Int, 
+                        cell_connectivity2::Vector{Int}, 
+                        cell_type2::Int
+                      )
     for k in cell_connectivity2
         in(k, cell_connectivity1) || return false
     end
@@ -7,9 +10,13 @@ function similar_cells(cell_connectivity1::Vector{Int}, cell_type1::Int,
     return true
 end
 
-coherent{T<:AbstractVTKMultiblockData}(a::T, b::T) = same_ordered_geometry_shape(a,b) && same_data_shape(a,b)
-coherent{T<:AbstractVTKSimpleData}(a::T, b::T) = same_geometry_shape(a, b) && same_data_shape(a, b)
-function coherent{T<:AbstractTimeSeriesVTKData}(dataset::T)
+function coherent(a::T, b::T) where {T<:AbstractVTKMultiblockData}
+    return same_ordered_geometry_shape(a,b) && same_data_shape(a,b)
+end
+function coherent(a::T, b::T) where {T<:AbstractVTKSimpleData}
+    return same_geometry_shape(a, b) && same_data_shape(a, b)
+end
+function coherent(dataset::AbstractTimeSeriesVTKData)
     length(dataset) == 0 && return true 
     block1 = dataset[1]
     for block in dataset[2:end]
@@ -17,7 +24,7 @@ function coherent{T<:AbstractTimeSeriesVTKData}(dataset::T)
     end
     return true
 end
-function coherent{T<:AbstractTimeSeriesVTKData}(a::T, b::T)
+function coherent(a::T, b::T) where {T<:AbstractTimeSeriesVTKData}
     length(a) == length(b) && 
     coherent(a) && coherent(b) && begin 
         _out = true
@@ -28,70 +35,96 @@ function coherent{T<:AbstractTimeSeriesVTKData}(a::T, b::T)
     end || return false
     return true
 end
-coherent{T<:AbstractVTKData, S<:AbstractVTKData}(a::T, b::S) = false
+coherent(a::AbstractVTKData, b::AbstractVTKData) = false
 
-extents(dataset::VTKStructuredData) = size(dataset.point_coords)[2:end]
-extents(dataset::VTKRectilinearData) = ([length(dataset.point_coords[i]) for i in 1:length(dataset.point_coords)]...)
-extents(dataset::VTKUniformRectilinearData) = (dataset.extents...)
+extents(dataset::VTKStructuredData) = Base.tail(size(dataset.point_coords))
+function extents(dataset::VTKRectilinearData)
+    return ntuple(i->length(dataset.point_coords[i]), Val(length(dataset.point_coords)))
+end
+extents(dataset::VTKUniformRectilinearData) = dataset.extents
 extents(dataset::AbstractVTKStructuredData, ind::Int) = extents(dataset)[ind]
-extents(dataset::AbstractVTKStructuredData, ind::Int...) = extents(dataset)[[ind...]]
-cell_extents(dataset::AbstractVTKStructuredData) = (([extents(dataset)...] .- 1)...)
+extents(dataset::AbstractVTKStructuredData, ind::Int...) = extents.(Ref(dataset), ind)
+cell_extents(dataset::AbstractVTKStructuredData) = ntuple(i -> extents(dataset, i) .- 1, dim(dataset))
 cell_extents(dataset::AbstractVTKStructuredData, ind::Int) = cell_extents(dataset)[ind]
-cell_extents(dataset::AbstractVTKStructuredData, ind::Int...) = cell_extents(dataset)[[ind...]]
+cell_extents(dataset::AbstractVTKStructuredData, ind::Int...) = cell_extents.(Ref(dataset), ind)
 
 dim(dataset::AbstractVTKUnstructuredData) = size(dataset.point_coords, 1)
 dim(dataset::AbstractVTKStructuredData) = length(extents(dataset))
 function dim(dataset::AbstractVTKMultiblockData)
-    _dims = Int[]
-    for b in dataset
-        push!(_dims, dim(b))
-    end
-    return max(_dims...)
+    return maximum(i -> dim(dataset[i]), 1:length(dataset))
 end
 
 num_of_points(dataset::AbstractVTKUnstructuredData) = size(dataset.point_coords, 2)
-num_of_points(dataset::AbstractVTKStructuredData) = reduce(*, extents(dataset))
-num_of_points(dataset::AbstractVTKMultiblockData) = sum([num_of_points(i) for i in dataset])
+num_of_points(dataset::AbstractVTKStructuredData) = prod(extents(dataset))
+num_of_points(dataset::AbstractVTKMultiblockData) = sum(num_of_points(i) for i in dataset)
 num_of_points(dataset::AbstractTimeSeriesVTKData, ind::Int=1) = num_of_points(dataset[ind]) 
 
 num_of_cells(dataset::AbstractVTKUnstructuredData) = length(dataset.cell_types)
-num_of_cells(dataset::AbstractVTKStructuredData) = reduce(*, [extents(dataset)...].-1)
-num_of_cells(dataset::AbstractVTKMultiblockData) = sum([num_of_cells(i) for i in dataset])
-num_of_cells(dataset::AbstractTimeSeriesVTKData, ind::Int=1) = num_of_cells(dataset[ind]) 
+num_of_cells(dataset::AbstractVTKStructuredData) = prod(extents(dataset) .- 1)
+num_of_cells(dataset::AbstractVTKMultiblockData) = sum(num_of_cells(i) for i in dataset)
+num_of_cells(dataset::AbstractTimeSeriesVTKData, ind::Int=1) = num_of_cells(dataset[ind])
 
 num_of_point_vars(dataset::AbstractVTKSimpleData) = length(dataset.point_data)
 num_of_cell_vars(dataset::AbstractVTKSimpleData) = length(dataset.cell_data)
 
-cell_type(dataset::Union{VTKUnstructuredData, VTKPolyData}, ind::Int) = dataset.cell_types[ind]
-cell_type(dataset::Union{VTKStructuredData, VTKRectilinearData}, ind::Int) = ind < 1 || ind > num_of_cells(dataset) ? throw("Out of bounds.") : dim(dataset) == 2 ? 9 : 12
-cell_type(dataset::VTKUniformRectilinearData, ind::Int) = ind < 1 || ind > num_of_cells(dataset) ? throw("Out of bounds.") : dim(dataset) == 2 ? 8 : 11
-cell_type{N}(dataset::AbstractVTKStructuredData, ind::NTuple{N,Int}) = cell_type(dataset, sub2ind(cell_extents(dataset), ind...))
-
-cell_connectivity(dataset::AbstractVTKUnstructuredData, cell_ind::Int) = dataset.cell_connectivity[cell_ind]
-function cell_connectivity{T<:AbstractVTKStructuredData, N}(dataset::T, _cell_ind::NTuple{N, Int})
-    pextents = extents(dataset)
-    cell_connectivity(T, pextents, _cell_ind)
+function cell_type(dataset::Union{VTKUnstructuredData, VTKPolyData}, ind::Int)
+    return dataset.cell_types[ind]
+end
+function cell_type(dataset::Union{VTKStructuredData, VTKRectilinearData}, ind::Int)
+    if ind < 1 || ind > num_of_cells(dataset)
+        throw("Out of bounds.")
+    else
+        return dim(dataset) == 2 ? 9 : 12
+    end
+end
+function cell_type(dataset::VTKUniformRectilinearData, ind::Int)
+    if ind < 1 || ind > num_of_cells(dataset)
+        throw("Out of bounds.")
+    else
+        return dim(dataset) == 2 ? 8 : 11
+    end
+end
+function cell_type(dataset::AbstractVTKStructuredData, ind::Tuple{Vararg{Int}})
+    return cell_type(dataset, (LinearIndices(cell_extents(dataset)))[ind...])
 end
 
-function cell_connectivity{T<:AbstractVTKStructuredData}(dataset::T, cell_ind)
+function cell_connectivity(dataset::AbstractVTKUnstructuredData, cell_ind::Int)
+    return dataset.cell_connectivity[cell_ind]
+end
+function cell_connectivity(dataset::T, cell_ind::Tuple{Vararg{Int}}) where {T<:AbstractVTKStructuredData}
+    pextents = extents(dataset)
+    return cell_connectivity(T, pextents, cell_ind)
+end
+
+function cell_connectivity(dataset::T, cell_ind) where {T<:AbstractVTKStructuredData}
     return cell_connectivity(T, extents(dataset), cell_ind)
 end
 
-function cell_connectivity{N}(T::DataType, pextents::NTuple{N,Int}, _cell_ind::NTuple{N,Int})
-    corner_point_ind = sub2ind(pextents, _cell_ind...)
+function cell_connectivity(T::DataType, pextents::NTuple{N,Int}, cell_ind::NTuple{N,Int}) where {N}
+    corner_point_ind = (LinearIndices(pextents))[cell_ind...]
     if N == 2 
         #1 <= cell_ind <= num_of_cells(dataset) || throw("Out of bounds.")
         if T <: VTKUniformRectilinearData
-            return [corner_point_ind, corner_point_ind+1, corner_point_ind+pextents[1], corner_point_ind+pextents[1]+1]
+            return [corner_point_ind, corner_point_ind + 1, corner_point_ind + pextents[1], 
+                    corner_point_ind + pextents[1] + 1]
         else
-            return [corner_point_ind, corner_point_ind+1, corner_point_ind+pextents[1]+1, corner_point_ind+pextents[1]]
+            return [corner_point_ind, corner_point_ind + 1, corner_point_ind + pextents[1] + 1, 
+                    corner_point_ind + pextents[1]]
         end
     elseif N == 3
         #1 <= cell_ind <= num_of_cells(dataset) || throw("Out of bounds.")
         if T <: VTKUniformRectilinearData
-            return [corner_point_ind, corner_point_ind+1, corner_point_ind+pextents[1], corner_point_ind+pextents[1]+1, corner_point_ind+pextents[1]*pextents[2], corner_point_ind+pextents[1]*pextents[2]+1, corner_point_ind+pextents[1]*pextents[2]+pextents[1], corner_point_ind+pextents[1]*pextents[2]+pextents[1]+1]
+            return [corner_point_ind, corner_point_ind + 1, corner_point_ind + pextents[1], 
+                    corner_point_ind + pextents[1] + 1, 
+                    corner_point_ind + pextents[1] * pextents[2], 
+                    corner_point_ind + pextents[1] * pextents[2] + 1, 
+                    corner_point_ind + pextents[1] * pextents[2] + pextents[1], 
+                    corner_point_ind + pextents[1] * pextents[2] + pextents[1] + 1]
         else
-            return [corner_point_ind, corner_point_ind+1, corner_point_ind+pextents[1]+1, corner_point_ind+pextents[1], corner_point_ind+pextents[1]*pextents[2], corner_point_ind+pextents[1]*pextents[2]+1, corner_point_ind+pextents[1]*pextents[2]+pextents[1]+1, corner_point_ind+pextents[1]*pextents[2]+pextents[1]]
+            return [corner_point_ind, corner_point_ind + 1, corner_point_ind + pextents[1] + 1,          corner_point_ind + pextents[1], 
+                    corner_point_ind + pextents[1] * pextents[2], 
+                    corner_point_ind + pextents[1] * pextents[2] + 1, 
+                    corner_point_ind + pextents[1] * pextents[2] + pextents[1] + 1, corner_point_ind + pextents[1] * pextents[2] + pextents[1]]
         end
     end
 
@@ -100,11 +133,11 @@ end
 
 function has_var(dataset::AbstractStaticVTKData, var_name::String)
     if haskey(dataset.point_data, var_name)
-        true, "Point"
+        return true, "Point"
     elseif haskey(dataset.cell_data, var_name)
-        true, "Cell"
+        return true, "Cell"
     else
-        false, ""
+        return false, ""
     end
 end
 
@@ -156,38 +189,40 @@ function var_dim(dataset::AbstractVTKStructuredData, var_name::String, var_type:
     end
 end
 
-vtk_cell_type_name(dataset::AbstractVTKStructuredData, cell_id) = VTK_CELL_TYPE[cell_type(dataset, cell_id)]
-
+function vtk_cell_type_name(dataset::AbstractVTKStructuredData, cell_id)
+    return VTK_CELL_TYPE[cell_type(dataset, cell_id)]
+end
 function is_homogeneous(dataset::AbstractVTKUnstructuredData)
     begin
-        _out = true
+        out = true
         for i in 2:num_of_cells(dataset)
-            (_out = cell_type(dataset, 1) == cell_type(dataset, i)) || break
+            (out = cell_type(dataset, 1) == cell_type(dataset, i)) || break
         end
-        _out
+        out
     end || return false
     return true
 end
 
 is_homogeneous(dataset::AbstractVTKStructuredData) = true
 
-is_homogeneous(dataset::AbstractVTKMultiblockData) = all([typeof(dataset[1]) == typeof(dataset[i]) for i in 2:length(dataset)])
-
+function is_homogeneous(dataset::AbstractVTKMultiblockData)
+    return all(i -> typeof(dataset[1]) == typeof(dataset[i]), 2:length(dataset))
+end
 function is_homogeneous(dataset::AbstractTimeSeriesVTKData)
     length(dataset) == 0 || 
     is_homogeneous(dataset[1]) && begin
-        _out = true
+        out = true
         i = dataset[1]
         T = typeof(i)
         for j in dataset
-            (_out = isa(j, T)) || break
+            (out = isa(j, T)) || break
             if T <: AbstractVTKMultiblockData || T <: AbstractVTKUnstructuredData 
-                (_out = same_ordered_geometry_shape(i,j)) || break
+                (out = same_ordered_geometry_shape(i,j)) || break
             else
-                (_out = same_geometry_shape(i,j)) || break
+                (out = same_geometry_shape(i,j)) || break
             end
         end
-        _out
+        out
     end || return false
     return true
 end
@@ -199,25 +234,28 @@ function get_cell_ids(dataset::AbstractVTKUnstructuredData, cell_types::Vector{I
             push!(cell_ids, i)
         end
     end
-    cell_ids
+    return cell_ids
 end
 
-get_lowest_index(_cell_connectivity::Vector{Vector{Int}}) = min([min(i...) for i in _cell_connectivity]...)
-
-get_highest_index(_cell_connectivity::Vector{Vector{Int}}) = max([max(i...) for i in _cell_connectivity]...)
-
-is_valid_cell(_cell_connectivity::Vector{Int}, cell_type) = VTK_CELL_TYPE[cell_type].nodes == -1 || 
-    length(_cell_connectivity) == VTK_CELL_TYPE[cell_type].nodes
-
+function get_lowest_index(cell_connectivity::Vector)
+    return minimum(i -> minimum(cell_connectivity[i]), 1:length(cell_connectivity))
+end
+function get_highest_index(cell_connectivity::Vector)
+    return maximum(i -> maximum(cell_connectivity[i]), 1:length(cell_connectivity))
+end
+function is_valid_cell(cell_connectivity::Vector{Int}, cell_type)
+    return VTK_CELL_TYPE[cell_type].nodes == -1 || 
+            length(_cell_connectivity) == VTK_CELL_TYPE[cell_type].nodes
+end
 num_of_blocks(dataset::AbstractVTKMultiblockData) = length(dataset.blocks)
 
 timespan(dataset::VTKTimeSeriesData) = dataset.timemarkers[end] - dataset.timemarkers[1]
 
 num_of_timesteps(dataset::VTKTimeSeriesData) = length(dataset.timemarkers)
 
-triangular(dataset::AbstractVTKUnstructuredData) = all(dataset.cell_types .== 5)
+triangular(dataset::AbstractVTKUnstructuredData) = all(i -> i == 5, dataset.cell_types)
 
-function bb{T<:AbstractVTKData}(dataset::T)
+function bb(dataset::T) where {T<:AbstractVTKData}
     if T <: AbstractVTKUnstructuredData
         return bb_unstruct(dataset)
     elseif T <: VTKStructuredData
@@ -250,7 +288,7 @@ function bb_unstruct(dataset::AbstractVTKUnstructuredData)
                 min_y = dataset.point_coords[2,i]                
             end
         end
-        return [min_x, max_x, min_y, max_y]
+        return (min_x, max_x, min_y, max_y)
     elseif _dim == 3
         min_z = max_z = dataset.point_coords[3,1]
         for i in 2:num_of_points(dataset)
@@ -272,7 +310,7 @@ function bb_unstruct(dataset::AbstractVTKUnstructuredData)
                 min_z = dataset.point_coords[3,i]                
             end
         end
-        return [min_x, max_x, min_y, max_y, min_z, max_z]
+        return (min_x, max_x, min_y, max_y, min_z, max_z)
     else
         throw("Invalid dimension.")
     end
@@ -351,7 +389,7 @@ function bb_struct(dataset::VTKStructuredData)
                 min_y = dataset.point_coords[2,i]                
             end
         end
-        return [min_x, max_x, min_y, max_y]
+        return (min_x, max_x, min_y, max_y)
     elseif _dim == 3
         min_z = max_z = dataset.point_coords[3,1]
         for (i,j,k) in surface_cell_inds(dataset)
@@ -373,7 +411,7 @@ function bb_struct(dataset::VTKStructuredData)
                 min_z = dataset.point_coords[3,i]                
             end
         end
-        return [min_x, max_x, min_y, max_y, min_z, max_z]
+        return (min_x, max_x, min_y, max_y, min_z, max_z)
     else
         throw("Invalid dimension.")
     end
@@ -386,11 +424,11 @@ function bb_rect(dataset::VTKRectilinearData)
     max_y = dataset.point_coords[2][end]
 
     if dim(dataset) == 2
-        return [min_x, max_x, min_y, max_y]
+        return (min_x, max_x, min_y, max_y)
     elseif dim(dataset) == 3
         min_z = dataset.point_coords[3][1]
         max_z = dataset.point_coords[3][end]
-        return [min_x, max_x, min_y, max_y, min_z, max_z]
+        return (min_x, max_x, min_y, max_y, min_z, max_z)
     else
         throw("Invalid dimension.")
     end
@@ -403,11 +441,11 @@ function bb_image(dataset::VTKUniformRectilinearData)
     max_x = dataset.origin[2] + (dataset.extents[2]-1)*dataset.spacing[2]
 
     if dim(dataset) == 2
-        return [min_x, max_x, min_y, max_y]
+        return (min_x, max_x, min_y, max_y)
     elseif dim(dataset) == 3
         min_x = dataset.origin[3]
         max_x = dataset.origin[3] + (dataset.extents[3]-1)*dataset.spacing[3]
-        return [min_x, max_x, min_y, max_y, min_z, max_z]
+        return (min_x, max_x, min_y, max_y, min_z, max_z)
     else
         throw("Invalid dimension.")
     end
@@ -415,10 +453,10 @@ end
 
 function bb_multiblock_time(dataset::Union{AbstractVTKMultiblockData, AbstractTimeSeriesVTKData})
     _bbs = [bb(block) for block in dataset]
-    min_x = min([_bbs[i][1] for i in 1:length(_bbs)]...)
-    max_x = max([_bbs[i][2] for i in 1:length(_bbs)]...)
-    min_y = min([_bbs[i][3] for i in 1:length(_bbs)]...)
-    max_y = max([_bbs[i][4] for i in 1:length(_bbs)]...)
+    min_x = minimum(i -> _bbs[i][1], 1:length(_bbs))
+    max_x = maximum(i -> _bbs[i][2], 1:length(_bbs))
+    min_y = minimum(i -> _bbs[i][3], 1:length(_bbs))
+    max_y = maximum(i -> _bbs[i][4], 1:length(_bbs))
 
     _first = true
     min_z = max_z = 0
@@ -439,13 +477,13 @@ function bb_multiblock_time(dataset::Union{AbstractVTKMultiblockData, AbstractTi
     end
 
     if min_z == max_z == 0
-        return [min_x, max_x, min_y, max_y]
+        return (min_x, max_x, min_y, max_y)
     else
-        return [min_x, max_x, min_y, max_y, min_z, max_z]
+        return (min_x, max_x, min_y, max_y, min_z, max_z)
     end
 end
 
-function pseudo_center{T<:AbstractVTKData}(dataset::T)
+function pseudo_center(dataset::T) where {T<:AbstractVTKData}
     _bb = bb(dataset)
-    return [(_bb[i] + _bb[i+1])/2 for i in 1:2:length(_bb)]
+    return ntuple(i -> (_bb[2i-1] + _bb[2i])/2, Val(length(_bb)÷2))
 end

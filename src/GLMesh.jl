@@ -1,26 +1,26 @@
 function color_map(v)
-    0. <= v <= 1. || println("Warning: color value must be scaled between 0 and 1.")
-    if 0. <= v < .25
-        b = 1.
+    0.0 <= v <= 1.0 || println("Warning: color value must be scaled between 0 and 1.")
+    if 0.0 <= v < 0.25
+        b = 1.0
         g = v/0.25
-        r = 0.
-    elseif .25 <= v < .5
-        b = 1.-v/0.25
-        g = 1.
-        r = 0.
-    elseif .5 <= v < .75
-        b = 0.
-        g = 1.
+        r = 0.0
+    elseif 0.25 <= v < 0.5
+        b = 1.0 - v/0.25
+        g = 1.0
+        r = 0.0
+    elseif 0.5 <= v < 0.75
+        b = 0.0
+        g = 1.0
         r = v/0.25
     else
-        b = 0.
-        g = 1.-v/0.25
-        r = 1.
+        b = 0.0
+        g = 1.0 - v/0.25
+        r = 1.0
     end
     return r,g,b
 end
 
-function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1, opacity::Float64=1.)
+function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1, opacity::Float64=1.0)
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 
     cell_register = Dict{Vector{Int}, GLTriangle}()
@@ -35,7 +35,7 @@ function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1
     end
 
     ncells = length(cell_register)
-    cell_data = Dict{String, Array{Float64}}()
+    cell_data = empty(dataset.cell_data)
     faces = GLTriangle[]
 
     for (i, kv) in enumerate(cell_register)
@@ -49,18 +49,18 @@ function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1
         if component == -1 || component == 1 && _var_dim == 1
             if _var_dim == 1
                 _values = color_variable
-                cmin = min(_values...)
-                cmax = max(_values...)
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             else
-                _values = [norm(color_variable[:,i]) for i in 1:num_of_points(dataset)]
-                cmin = min(_values...)
-                cmax = max(_values...)
+                @views _values = [norm(color_variable[:,i]) for i in 1:num_of_points(dataset)]
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             end
         else
             if 1 <= component <= _var_dim
                 _values = color_variable[component,:]
-                cmin = min(_values...)
-                cmax = max(_values...)
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             else
                 throw("Cannot use component $component of a $color. $color only has $_var_dim components.")
             end
@@ -69,17 +69,17 @@ function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1
         colors = RGBA{Float32}[RGBA{Float32}(color_map(scaled_value[i])..., opacity)
             for i=1:num_of_points(dataset)]
     else
-        colors = RGBA{Float32}[RGBA{Float32}(1.,1.,1.)
+        colors = RGBA{Float32}[RGBA{Float32}(1.0, 1.0, 1.0)
             for i=1:num_of_points(dataset)]
     end
 
-    vertices = [Point{3, Float32}(dataset.point_coords[:,i]...) 
+    @views vertices = [Point{3, Float32}(dataset.point_coords[:,i]...) 
         for i in 1:num_of_points(dataset)]
 
     return GLNormalVertexcolorMesh(vertices=vertices, faces=faces, color=colors)
 end
 
-function GLMesh(dataset::VTKPolyData; color::String="", component::Int=1, opacity::Float64=1.)
+function GLMesh(dataset::VTKPolyData; color::String="", component::Int=1, opacity::Float64=1.0)
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 
     faces = GLTriangle[]
@@ -93,18 +93,18 @@ function GLMesh(dataset::VTKPolyData; color::String="", component::Int=1, opacit
         if component == -1 || component == 1 && _var_dim == 1
             if _var_dim == 1
                 _values = color_variable
-                cmin = min(_values...)
-                cmax = max(_values...)
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             else
-                _values = [norm(color_variable[:,i]) for i in 1:num_of_points(dataset)]
-                cmin = min(_values...)
-                cmax = max(_values...)
+                @views _values = [norm(color_variable[:,i]) for i in 1:num_of_points(dataset)]
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             end
         else
             if 1 <= component <= _var_dim
-                _values = color_variable[component,:]
-                cmin = min(_values...)
-                cmax = max(_values...)
+                @views _values = color_variable[component,:]
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             else
                 throw("Cannot use component $component of a $color. $color only has $_var_dim components.")
             end
@@ -113,17 +113,17 @@ function GLMesh(dataset::VTKPolyData; color::String="", component::Int=1, opacit
         colors = RGBA{Float32}[RGBA{Float32}(color_map(scaled_value[i])..., opacity)
             for i=1:num_of_points(dataset)]
     else
-        colors = RGBA{Float32}[RGBA{Float32}(1.,1.,1.)
+        colors = RGBA{Float32}[RGBA{Float32}(1.0,1.0,1.0)
             for i=1:num_of_points(dataset)]
     end
 
-    vertices = [Point{3, Float32}(dataset.point_coords[:,i]...) 
+    @views vertices = [Point{3, Float32}(dataset.point_coords[:,i]...) 
         for i in 1:num_of_points(dataset)]
 
     return GLNormalVertexcolorMesh(vertices=vertices, faces=faces, color=colors)
 end
 
-function GLMesh(_dataset::AbstractVTKStructuredData; color::String="", component::Int=1, opacity::Float64=1.)
+function GLMesh(_dataset::AbstractVTKStructuredData; color::String="", component::Int=1, opacity::Float64=1.0)
     dataset = VTKStructuredData(_dataset)
     pextents = extents(dataset)
     _dim = dim(dataset)
@@ -148,18 +148,18 @@ function GLMesh(_dataset::AbstractVTKStructuredData; color::String="", component
         if component == -1 || component == 1 && _var_dim == 1
             if _var_dim == 1
                 _values = color_variable
-                cmin = min(_values...)
-                cmax = max(_values...)
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             else
-                _values = [norm(color_variable[:,i]) for i in 1:num_of_points(dataset)]
-                cmin = min(_values...)
-                cmax = max(_values...)
+                @views _values = [norm(color_variable[:,i]) for i in 1:num_of_points(dataset)]
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             end
         else
             if 1 <= component <= _var_dim
-                _values = color_variable[component,:]
-                cmin = min(_values...)
-                cmax = max(_values...)
+                @views _values = color_variable[component,:]
+                cmin = minimum(_values)
+                cmax = maximum(_values)
             else
                 throw("Cannot use component $component of a $color. $color only has $_var_dim components.")
             end
@@ -172,8 +172,8 @@ function GLMesh(_dataset::AbstractVTKStructuredData; color::String="", component
             for i=1:num_of_points(dataset)]
     end
 
-    vertices = [Point{3, Float32}(dataset.point_coords[:,cind...]...) 
-        for cind in product([1:pextents[i] for i in 1:length(pextents)]...)]
+    @views vertices = vec([Point{3, Float32}(dataset.point_coords[:,cind...]...) 
+        for cind in Iterators.product([1:pextents[i] for i in 1:length(pextents)]...)])
 
     return GLNormalVertexcolorMesh(vertices=vertices, faces=faces, color=colors)
 end
@@ -181,7 +181,7 @@ end
 function decompose_to_glmesh_2d(dataset::VTKStructuredData)
     cextents = cell_extents(dataset)
     faces = GLTriangle[]
-    for cind in product(1:cextents[1], 1:cextents[2])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
         push!(faces, GLTriangle(quad_cc[1], quad_cc[2], quad_cc[3]))
         push!(faces, GLTriangle(quad_cc[1], quad_cc[3], quad_cc[4]))
@@ -192,7 +192,7 @@ end
 function decompose_to_glmesh_3d(dataset::VTKStructuredData)
     cextents = cell_extents(dataset)
     faces = GLTriangle[]
-    for cind in product(1:cextents[1], 1:cextents[2], 1:cextents[3])
+    for cind in Iterators.product(1:cextents[1], 1:cextents[2], 1:cextents[3])
         hexa_cc = cell_connectivity(dataset, cind)
         push!(faces, GLTriangle(hexa_cc[1], hexa_cc[2], hexa_cc[3]))
         push!(faces, GLTriangle(hexa_cc[1], hexa_cc[3], hexa_cc[4]))
@@ -219,4 +219,3 @@ function decompose_to_glmesh_3d(dataset::VTKStructuredData)
 
     return faces
 end
-

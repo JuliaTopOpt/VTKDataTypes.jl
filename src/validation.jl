@@ -1,4 +1,6 @@
-function is_valid_unstructured_mesh{_T<:AbstractVTKUnstructuredData}(dataset::_T, repeat_cells::Bool)
+function is_valid_unstructured_mesh(dataset::_T, 
+                                    repeat_cells::Bool
+                                   ) where {_T<:AbstractVTKUnstructuredData}
     T = repr(_T)
     _point_coords, _cell_types, _cell_connectivity, _point_data, _cell_data = dataset.point_coords, 
         dataset.cell_types, dataset.cell_connectivity, dataset.point_data, dataset.cell_data
@@ -100,7 +102,7 @@ function is_valid(dataset::VTKStructuredData)
         _out
     end || return false, "$T: The point extents of the mesh and one of the point data fields are not consistent."
 
-    cell_extents = (([_extents...] .- 1)...)
+    cell_extents = (_extents .- 1)
     _keys = collect(keys(dataset.cell_data))
     length(_keys) == 0 || begin
         _out = true
@@ -114,7 +116,7 @@ function is_valid(dataset::VTKStructuredData)
     return true, ""
 end
 
-function is_valid{S}(dataset::VTKRectilinearData{S})
+function is_valid(dataset::VTKRectilinearData{S}) where {S}
     T = "VTKRectilinearData"
     in(length(dataset.point_coords), [2,3]) || return false, "$T: Only 2 and 3 dimensional mesh data are allowed."
 
@@ -152,7 +154,7 @@ function is_valid{S}(dataset::VTKRectilinearData{S})
     return true, ""
 end
 
-function is_valid{S}(dataset::VTKUniformRectilinearData{S})
+function is_valid(dataset::VTKUniformRectilinearData{S}) where {S}
     T = "VTKUniformRectilinearData"
     !(S <: Real) || begin 
         _out = true
@@ -177,7 +179,7 @@ function is_valid{S}(dataset::VTKUniformRectilinearData{S})
         _out
     end || return false, "$T: The point extents of the mesh and one of the point data fields are not consistent."
 
-    cell_extents = (([_extents...] .- 1)...)
+    cell_extents = _extents .- 1
     _keys = collect(keys(dataset.cell_data))
     length(_keys) == 0 || begin
         _out = true

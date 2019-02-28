@@ -1,5 +1,4 @@
-
-function decompose(dataset::AbstractVTKUnstructuredData, target::String="Faces", decompose_cell_data=false)
+function decompose(dataset::AbstractVTKUnstructuredData, target::String = "Faces", decompose_cell_data = false)
     if decompose_cell_data
         return decompose_with_cell_data(dataset, target)
     else
@@ -7,11 +6,11 @@ function decompose(dataset::AbstractVTKUnstructuredData, target::String="Faces",
     end
 end
 
-type _Counter
+mutable struct _Counter
     a::Int
 end
 
-function decompose_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{S}, target::String="Faces")
+function decompose_with_cell_data(dataset::AbstractVTKUnstructuredData, target::String="Faces")
     if target == "Faces"
         filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
     elseif target == "Lines"
@@ -24,7 +23,7 @@ function decompose_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{
     #Sorted inds and cell type are keys
     #Cell connectivity, cell count, and cell data are the values
 
-    cell_register = Dict{Tuple{Vector{Int}, Int}, Tuple{Vector{Int}, _Counter, Dict{String, Array}}}()
+    cell_register = Dict{Tuple{Vector{Int}, Int}, Tuple{Vector{Int}, _Counter, typeof(dataset.cell_data)}}()
     for i in 1:length(dataset.cell_connectivity)
         if target == "Points"
             _cells, _types = [[k] for k in dataset.cell_connectivity[i]], [1 for k in 1:length(dataset.cell_connectivity[i])]
@@ -38,19 +37,19 @@ function decompose_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{
                 for m in keys(dataset.cell_data)
                     _var_dim = var_dim(dataset, m, "Cell")
                     if _var_dim == 1
-                        cell_register[_key][3][m] += [dataset.cell_data[m][i]]
+                        cell_register[_key][3][m] += dataset.cell_data[m][i:i]
                     else
-                        cell_register[_key][3][m] += dataset.cell_data[m][:,i]
+                        @views cell_register[_key][3][m] += dataset.cell_data[m][:,i:i]
                     end
                 end
             else
-                cell_register[_key] = (_cells[j], _Counter(1), Dict{String, Array}())
+                cell_register[_key] = (_cells[j], _Counter(1), empty(dataset.cell_data))
                 for m in keys(dataset.cell_data)
                     _var_dim = var_dim(dataset, m, "Cell")
                     if _var_dim == 1
-                        cell_register[_key][3][m] = [dataset.cell_data[m][i]]
+                        cell_register[_key][3][m] = dataset.cell_data[m][i:i]
                     else
-                        cell_register[_key][3][m] = dataset.cell_data[m][:,i]
+                        @views cell_register[_key][3][m] = dataset.cell_data[m][:,i:i]
                     end
                 end
             end
@@ -58,7 +57,7 @@ function decompose_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{
     end
 
     ncells = length(cell_register)
-    cell_data = Dict{String, Array{Float64}}()
+    cell_data = empty(dataset.cell_data)
     _cell_connectivity = [Int[] for i in 1:ncells]
     _cell_types = zeros(Int, ncells)
 
@@ -79,7 +78,7 @@ function decompose_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{
             if _var_dim == 1
                 cell_data[m][i] = v[3][m][1]
             else
-                cell_data[m][:,i] = v[3][m]
+                cell_data[m][:,i:i] = v[3][m]
             end
         end
         _cell_connectivity[i] = v[1]
@@ -89,7 +88,9 @@ function decompose_with_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{
     return VTKPolyData(point_coords, _cell_types, _cell_connectivity, point_data, cell_data)
 end
 
-function decompose_no_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{S}, target::String="Faces")
+function decompose_no_cell_data(dataset::AbstractVTKUnstructuredData, 
+                                target::String = "Faces"
+                               )
     if target == "Faces"
         filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
     elseif target == "Lines"
@@ -117,7 +118,7 @@ function decompose_no_cell_data{S<:Real}(dataset::AbstractVTKUnstructuredData{S}
     end
 
     ncells = length(cell_register)
-    cell_data = Dict{String, Array{Float64}}()
+    cell_data = empty(dataset.cell_data)
     _cell_connectivity = [Int[] for i in 1:ncells]
     _cell_types = Int[]
 
