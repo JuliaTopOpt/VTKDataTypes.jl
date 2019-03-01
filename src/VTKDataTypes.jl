@@ -6,6 +6,8 @@ using GeometryTypes
 using Colors
 using IterTools
 
+import GeometryTypes: decompose
+
 include("vtkcelltypes.jl")
 include("types.jl")
 include("utils.jl")

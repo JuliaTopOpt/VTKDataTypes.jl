@@ -27,7 +27,7 @@ function GLMesh(dataset::VTKUnstructuredData; color::String="", component::Int=1
     for i in 1:length(dataset.cell_connectivity)
         _cells = triangulate_cell_glmesh(dataset.cell_connectivity[i], dataset.cell_types[i])
         for j in 1:length(_cells)
-            _key = sort([_cells[j]._...])
+            _key = sort(Int.(_cells[j]))
             if !haskey(cell_register, _key)
                 cell_register[_key] = _cells[j]
             end
