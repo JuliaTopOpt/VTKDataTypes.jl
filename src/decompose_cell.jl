@@ -43,7 +43,7 @@ end
 
 function decompose_triangle(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[cell_connectivity], Int[5]
+        return Vector{Int}[[cell_connectivity...]], Int[5]
     else
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ], 
             [ cell_connectivity[2], cell_connectivity[3] ], 

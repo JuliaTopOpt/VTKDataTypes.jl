@@ -1,6 +1,6 @@
 function triangulate_cell(cell_connectivity, cell_type::Int)
     if cell_type == 5 || cell_type == 6 || cell_type == 10
-        return decompose_cell(cell_connectivity, cell_type, target = "Faces")[1]
+        return NTuple{3, Int}.(decompose_cell(cell_connectivity, cell_type, target = "Faces")[1])
     elseif cell_type == 8
         return NTuple{3, Int}[(cell_connectivity[1], cell_connectivity[2], cell_connectivity[4]), 
             (cell_connectivity[1], cell_connectivity[4], cell_connectivity[3])]

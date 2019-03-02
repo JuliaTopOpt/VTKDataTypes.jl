@@ -1,4 +1,4 @@
-function triangulate_with_cell_data(dataset::AbstractVTKUnstructuredData, OutputT = NTuple{3,Int})
+function triangulate_with_cell_data(dataset::AbstractVTKUnstructuredData, OutputT = NTuple{3,Int}, reduction = :max)
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 
     point_coords = dataset.point_coords
@@ -17,9 +17,17 @@ function triangulate_with_cell_data(dataset::AbstractVTKUnstructuredData, Output
                 for m in keys(dataset.cell_data)
                     _var_dim = var_dim(dataset, m, "Cell")
                     if _var_dim == 1
-                        cell_register[_key][3][m] += [dataset.cell_data[m][i]]
+                        if reduction == :mean
+                            cell_register[_key][3][m] += [dataset.cell_data[m][i]]
+                        else
+                            cell_register[_key][3][m] = max(cell_register[_key][3][m], [dataset.cell_data[m][i]])
+                        end
                     else
-                        cell_register[_key][3][m] += dataset.cell_data[m][:,i]
+                        if reduction == :mean
+                            cell_register[_key][3][m] += dataset.cell_data[m][:,i]
+                        else
+                            cell_register[_key][3][m] = max.(cell_register[_key][3][m], dataset.cell_data[m][:,i])
+                        end
                     end
                 end
             else
@@ -52,7 +60,9 @@ function triangulate_with_cell_data(dataset::AbstractVTKUnstructuredData, Output
     for (i, kv) in enumerate(cell_register)
         k, v = kv
         for m in keys(dataset.cell_data)
-            v[3][m] = v[3][m] ./ v[2].a
+            if reduction == :mean
+                v[3][m] = v[3][m] ./ v[2].a
+            end
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 cell_data[m][i] = v[3][m][1]
@@ -60,7 +70,8 @@ function triangulate_with_cell_data(dataset::AbstractVTKUnstructuredData, Output
                 cell_data[m][:,i] = v[3][m]
             end
         end
-        push!(_cell_connectivity, OutputT(v[1]...))
+        cc = OutputT <: Tuple ? v[1] : OutputT(v[1]...)
+        push!(_cell_connectivity, cc)
     end
 
     _cell_types = [5 for i in 1:ncells]
@@ -93,7 +104,8 @@ function triangulate_no_cell_data(dataset::AbstractVTKUnstructuredData, OutputT 
 
     for (i, kv) in enumerate(cell_register)
         k, v = kv
-        push!(_cell_connectivity, OutputT(v...))
+        cc = OutputT <: Tuple ? v : OutputT(v...)
+        push!(_cell_connectivity, cc)
     end
     _cell_types = [5 for i in 1:ncells]
 
