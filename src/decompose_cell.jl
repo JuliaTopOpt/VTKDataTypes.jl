@@ -1,4 +1,4 @@
-function decompose_cell(cell_connectivity::Vector{Int}, cell_type::Int; target::String="")
+function decompose_cell(cell_connectivity, cell_type::Int; target::String="")
     if target == ""
         if in(cell_type, POINT_CELLS) || in(cell_type, LINE_CELLS)
             throw("Cell is already represented as points.")
@@ -41,7 +41,7 @@ function decompose_cell(cell_connectivity::Vector{Int}, cell_type::Int; target::
     end
 end
 
-function decompose_triangle(cell_connectivity::Vector{Int}, target::String)
+function decompose_triangle(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[cell_connectivity], Int[5]
     else
@@ -52,7 +52,7 @@ function decompose_triangle(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_triangle_strip(cell_connectivity::Vector{Int}, target::String)
+function decompose_triangle_strip(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[i], cell_connectivity[i+1], cell_connectivity[i+2] ] 
             for i in 1:length(cell_connectivity)-2], fill(5, length(cell_connectivity)-2)
@@ -66,7 +66,7 @@ function decompose_triangle_strip(cell_connectivity::Vector{Int}, target::String
     end
 end
 
-function decompose_pixel(cell_connectivity::Vector{Int}, target::String)
+function decompose_pixel(cell_connectivity, target::String)
     if target == "Faces"
         return [cell_connectivity], [8]
     else
@@ -78,7 +78,7 @@ function decompose_pixel(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_quad(cell_connectivity::Vector{Int}, target::String)
+function decompose_quad(cell_connectivity, target::String)
     if target == "Faces"
         return [cell_connectivity], [9]
     else
@@ -90,7 +90,7 @@ function decompose_quad(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_tetra(cell_connectivity::Vector{Int}, target::String)
+function decompose_tetra(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3] ], 
             [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[4] ], 
@@ -108,7 +108,7 @@ function decompose_tetra(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_voxel(cell_connectivity::Vector{Int}, target::String)
+function decompose_voxel(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[4], cell_connectivity[3] ], 
             [ cell_connectivity[5], cell_connectivity[6], cell_connectivity[8], cell_connectivity[7] ],
@@ -134,7 +134,7 @@ function decompose_voxel(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_hexa(cell_connectivity::Vector{Int}, target::String)
+function decompose_hexa(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[4] ], 
             [ cell_connectivity[5], cell_connectivity[6], cell_connectivity[7], cell_connectivity[8] ],
@@ -160,7 +160,7 @@ function decompose_hexa(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_wedge(cell_connectivity::Vector{Int}, target::String)
+function decompose_wedge(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[5], cell_connectivity[4] ], 
             [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3] ], 
@@ -182,7 +182,7 @@ function decompose_wedge(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_pyramid(cell_connectivity::Vector{Int}, target::String)
+function decompose_pyramid(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[4] ], 
             [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[5] ], 
@@ -203,7 +203,7 @@ function decompose_pyramid(cell_connectivity::Vector{Int}, target::String)
     end
 end
 
-function decompose_quadratic_triangle(cell_connectivity::Vector{Int}, target::String)
+function decompose_quadratic_triangle(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[cell_connectivity], Int[22]
     else
@@ -214,7 +214,7 @@ function decompose_quadratic_triangle(cell_connectivity::Vector{Int}, target::St
     end
 end
 
-function decompose_quadratic_quad(cell_connectivity::Vector{Int}, target::String)
+function decompose_quadratic_quad(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[cell_connectivity], Int[23]
     else
@@ -226,7 +226,7 @@ function decompose_quadratic_quad(cell_connectivity::Vector{Int}, target::String
     end
 end
 
-function decompose_quadratic_tetra(cell_connectivity::Vector{Int}, target::String)
+function decompose_quadratic_tetra(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[5], cell_connectivity[6], cell_connectivity[7] ], 
             [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[4], cell_connectivity[5], cell_connectivity[9], cell_connectivity[8] ], 
@@ -244,7 +244,7 @@ function decompose_quadratic_tetra(cell_connectivity::Vector{Int}, target::Strin
     end
 end
 
-function decompose_quadratic_hexa(cell_connectivity::Vector{Int}, target::String)
+function decompose_quadratic_hexa(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[4], cell_connectivity[9], cell_connectivity[10], cell_connectivity[11], cell_connectivity[12] ],
             [ cell_connectivity[5], cell_connectivity[6], cell_connectivity[7], cell_connectivity[8], cell_connectivity[13], cell_connectivity[14], cell_connectivity[15], cell_connectivity[16] ], 

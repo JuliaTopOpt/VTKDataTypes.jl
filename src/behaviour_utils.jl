@@ -63,7 +63,7 @@ function remove_cell!(dataset::AbstractVTKUnstructuredData, cell_ind::Int)
     return num_of_cells(dataset)
 end
 
-function add_point_id_offset!(cell_connectivity::Vector, offset::Int)
+function add_point_id_offset!(cell_connectivity, offset::Int)
     for i in 1:length(cell_connectivity)
         cell_connectivity[i] = cell_connectivity[i] .+ offset
     end

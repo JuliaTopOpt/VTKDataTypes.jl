@@ -17,7 +17,7 @@ function same_geometry(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructure
         end
     end
 
-    function map_cell_connectivity(b_cell_connectivity::Vector{Int})
+    function map_cell_connectivity(b_cell_connectivity)
         b_cell_connectivity_mapped = zeros(b_cell_connectivity)
         for i in 1:length(b_cell_connectivity)
             b_cell_connectivity_mapped[i] = b_image_point_inds[b_cell_connectivity[i]]

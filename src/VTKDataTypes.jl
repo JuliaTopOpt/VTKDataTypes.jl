@@ -5,6 +5,7 @@ using ResumableFunctions
 using GeometryTypes
 using Colors
 using IterTools
+using StaticArrays
 
 import GeometryTypes: decompose
 
@@ -71,7 +72,6 @@ export  AbstractVTKData,
         insert_timed_data!, 
         remove_timed_data!, 
         is_valid, 
-        convert, 
         simple_block_generator, 
         increase_resolution!,
         triangular, 

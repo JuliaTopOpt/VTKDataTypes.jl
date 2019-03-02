@@ -237,13 +237,13 @@ function get_cell_ids(dataset::AbstractVTKUnstructuredData, cell_types::Vector{I
     return cell_ids
 end
 
-function get_lowest_index(cell_connectivity::Vector)
+function get_lowest_index(cell_connectivity)
     return minimum(i -> minimum(cell_connectivity[i]), 1:length(cell_connectivity))
 end
-function get_highest_index(cell_connectivity::Vector)
+function get_highest_index(cell_connectivity)
     return maximum(i -> maximum(cell_connectivity[i]), 1:length(cell_connectivity))
 end
-function is_valid_cell(cell_connectivity::Vector{Int}, cell_type)
+function is_valid_cell(cell_connectivity, cell_type)
     return VTK_CELL_TYPE[cell_type].nodes == -1 || 
             length(_cell_connectivity) == VTK_CELL_TYPE[cell_type].nodes
 end

@@ -171,7 +171,7 @@ function ==(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructuredData)
     end
 
     #Describing a cell of b in terms of points of a
-    function map_cell_connectivity(b_cell_connectivity::Vector{Int})
+    function map_cell_connectivity(b_cell_connectivity)
         b_cell_connectivity_mapped = zeros(Int, length(b_cell_connectivity))
         for i in 1:length(b_cell_connectivity)
             b_cell_connectivity_mapped[i] = b_image_point_inds[b_cell_connectivity[i]]
