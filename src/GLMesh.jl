@@ -26,7 +26,7 @@ end
 struct BlackScheme end
 function (::BlackScheme)(v)
     0.0 <= v <= 1.0 || println("Warning: color value must be scaled between 0 and 1.")
-    return 1.0, 1.0, 1.0, v
+    return 0.7, 0.7, 0.7, v
 end
 
 function get_jl_mapped_colors(dataset::T, color_variable_name, component, opacity, color_scheme = BlackScheme(), scale = true) where {T<:AbstractVTKSimpleData}
