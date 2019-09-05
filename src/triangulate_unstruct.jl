@@ -112,6 +112,26 @@ function triangulate_no_cell_data(dataset::AbstractVTKUnstructuredData, OutputT 
     return VTKPolyData(point_coords, _cell_types, _cell_connectivity, point_data, cell_data)
 end
 
+function remove_unused_vertices(dataset::AbstractVTKUnstructuredData)
+    if length(dataset.cell_connectivity) == 0
+        N = size(dataset.point_coords, 1)
+        return typeof(dataset)(zeros(dim, 0), Int[], copy(dataset.cell_connectivity), empty(dataset.point_data), empty(dataset.cell_data))
+    end
+    I = length(dataset.cell_connectivity)
+    J = length(dataset.cell_connectivity[1].data)
+    all_node_inds = unique!(vec([Int(dataset.cell_connectivity[i].data[j]) for j in 1:J, i in 1:I]))
+    nnodes = length(all_node_inds)
+    ind_map = Dict(all_node_inds[i] => i for i in 1:nnodes)
+    diff = size(dataset.point_coords, 2) - nnodes
+    cell_connectivity = map(dataset.cell_connectivity) do cc
+        getindex.(Ref(ind_map), Int.(cc))
+    end
+    point_coords = dataset.point_coords[:, all_node_inds]
+    point_data = Dict(k => dataset.point_data[k][:, all_node_inds] for k in keys(dataset.point_data))
+
+    return typeof(dataset)(point_coords, copy(dataset.cell_types), cell_connectivity, point_data, deepcopy(dataset.cell_data))
+end
+
 function duplicate_vertices(dataset::AbstractVTKUnstructuredData)
     @assert all(isequal(5), dataset.cell_types)
     point_coords = zeros(size(dataset.point_coords, 1), 3*num_of_cells(dataset))

@@ -1,10 +1,12 @@
 function triangulate_cell(cell_connectivity, cell_type::Int)
-    if cell_type == 5 || cell_type == 6 || cell_type == 10
+    if cell_type == 5 || cell_type == 6 || cell_type == 10 || cell_type == 24
         return NTuple{3, Int}.(decompose_cell(cell_connectivity, cell_type, target = "Faces")[1])
+    elseif cell_type == 22
+        return NTuple{3, Int}[(cell_connectivity[1], cell_connectivity[2], cell_connectivity[3])]
     elseif cell_type == 8
         return NTuple{3, Int}[(cell_connectivity[1], cell_connectivity[2], cell_connectivity[4]), 
             (cell_connectivity[1], cell_connectivity[4], cell_connectivity[3])]
-    elseif cell_type == 9
+    elseif cell_type == 9 || cell_type == 24
         return NTuple{3, Int}[(cell_connectivity[1], cell_connectivity[2], cell_connectivity[3]),
             (cell_connectivity[1], cell_connectivity[3], cell_connectivity[4])]
     elseif cell_type == 11 || cell_type == 12 || cell_type == 13 || cell_type == 14

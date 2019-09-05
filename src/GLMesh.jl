@@ -96,7 +96,7 @@ function GLMesh(dataset::AbstractVTKUnstructuredData; color::String="", componen
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
     tri_cell_data = color in keys(dataset.cell_data)
     tri_dataset = triangulate(dataset, tri_cell_data, GLTriangle)
-    tri_dataset = VTKDataTypes.duplicate_vertices(tri_dataset)
+    tri_dataset = tri_dataset |> VTKDataTypes.remove_unused_vertices |> VTKDataTypes.duplicate_vertices
     if haskey(tri_dataset.cell_data, color)
         celldata_to_pointdata!(tri_dataset)
     end
@@ -116,5 +116,5 @@ function GLMesh(dataset::AbstractVTKUnstructuredData; color::String="", componen
         end
     end
     faces = tri_dataset.cell_connectivity
-    return GLNormalVertexcolorMesh(vertices=vertices, faces=faces), color_vec
+    return GLNormalVertexcolorMesh(vertices=vertices, faces=faces, color=color_vec)
 end
