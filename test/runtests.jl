@@ -1,4 +1,3 @@
-
-using Base.Test
+using Test
 
 include("makingtypes.jl")
