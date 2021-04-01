@@ -11,6 +11,9 @@ ResumableFunctions = "c5292f4c-5179-55e1-98c5-05642aab7184"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 WriteVTK = "64499a7a-5c06-52f2-abe2-ccb03c286192"
 
+[compat]
+StaticArrays = "1.1"
+
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
