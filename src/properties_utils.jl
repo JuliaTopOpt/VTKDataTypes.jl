@@ -1,6 +1,6 @@
 function similar_cells( cell_connectivity1::Vector{Int}, 
                         cell_type1::Int, 
-                        cell_connectivity2::Vector{Int}, 
+                        cell_connectivity2::Union{Tuple{Vararg{Int}}, Vector{Int}},
                         cell_type2::Int
                       )
     for k in cell_connectivity2

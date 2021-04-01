@@ -92,11 +92,14 @@ function get_jl_mapped_colors(dataset::T, color_variable_name, component, opacit
     return jl_mapped_colors, cmin, cmax
 end
 
+function GLMesh(rectilinear::AbstractVTKStructuredData; kwargs...)
+    GLMesh(VTKUnstructuredData(rectilinear); kwargs...)
+end
 function GLMesh(dataset::AbstractVTKUnstructuredData; color::String="", component::Int=-1, opacity::Float64=1.0, color_scheme = BlackScheme())
     filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
     tri_cell_data = color in keys(dataset.cell_data)
     tri_dataset = triangulate(dataset, tri_cell_data, GLTriangle)
-    tri_dataset = tri_dataset |> VTKDataTypes.remove_unused_vertices |> VTKDataTypes.duplicate_vertices
+    tri_dataset = tri_dataset |> remove_unused_vertices |> duplicate_vertices
     if haskey(tri_dataset.cell_data, color)
         celldata_to_pointdata!(tri_dataset)
     end

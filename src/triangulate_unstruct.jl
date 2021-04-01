@@ -127,22 +127,27 @@ function remove_unused_vertices(dataset::AbstractVTKUnstructuredData)
         getindex.(Ref(ind_map), Int.(cc))
     end
     point_coords = dataset.point_coords[:, all_node_inds]
-    point_data = Dict(k => dataset.point_data[k][:, all_node_inds] for k in keys(dataset.point_data))
-
+    point_data = Dict(
+        k => (
+            temp = dataset.point_data[k];
+            temp isa Matrix ? temp[:, all_node_inds] : temp[all_node_inds]
+        ) for k in keys(dataset.point_data)
+    )
     return typeof(dataset)(point_coords, copy(dataset.cell_types), cell_connectivity, point_data, deepcopy(dataset.cell_data))
 end
 
 function duplicate_vertices(dataset::AbstractVTKUnstructuredData)
     @assert all(isequal(5), dataset.cell_types)
-    point_coords = zeros(size(dataset.point_coords, 1), 3*num_of_cells(dataset))
+    N = sum(length(dataset.cell_connectivity[i]) for i in 1:num_of_cells(dataset))
+    point_coords = zeros(size(dataset.point_coords, 1), N)
     cell_connectivity = deepcopy(dataset.cell_connectivity)
     point_data = empty(dataset.point_data)
-    for m in keys(dataset.cell_data)
-        _var_dim = var_dim(dataset, m, "Cell")
+    for m in keys(dataset.point_data)
+        _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
-            point_data[m] = zeros(3*num_of_cells(dataset))
+            point_data[m] = zeros(N)
         else
-            point_data[m] = zeros(_var_dim, 3*num_of_points(dataset))
+            point_data[m] = zeros(_var_dim, N)
         end
     end
 
@@ -152,7 +157,7 @@ function duplicate_vertices(dataset::AbstractVTKUnstructuredData)
             point_counter += 1
             @views point_coords[:,point_counter] += dataset.point_coords[:,j]
             for m in keys(dataset.point_data)
-                _var_dim = var_dim(dataset, m, "Cell")
+                _var_dim = var_dim(dataset, m, "Point")
                 if _var_dim == 1
                     point_data[m][point_counter] += dataset.point_data[m][j]
                 else
@@ -163,8 +168,8 @@ function duplicate_vertices(dataset::AbstractVTKUnstructuredData)
         cell_connectivity[i] = (point_counter-2, point_counter-1, point_counter)
     end
 
-    for m in keys(dataset.cell_data)
-        _var_dim = var_dim(dataset, m, "Cell")
+    for m in keys(dataset.point_data)
+        _var_dim = var_dim(dataset, m, "Point")
         if _var_dim == 1
             point_data[m] = point_data[m] ./ max.(point_counter, 1)
         else
