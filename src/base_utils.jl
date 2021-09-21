@@ -138,16 +138,16 @@ function /(a::T, b::Real) where {T <: AbstractStaticVTKData}
     end
 end
 
-function ==(a::T,b::T) where {T<:AbstractVTKStructuredData}
+function ==(a::AbstractVTKStructuredData, b::AbstractVTKStructuredData)
     return same_geometry(a,b) && a.point_data == b.point_data && a.cell_data == b.cell_data
 end
-function ==(a::T, b::T) where {T<:VTKUniformRectilinearData}
+function ==(a::VTKUniformRectilinearData, b::VTKUniformRectilinearData)
     return  dim(a) == dim(b) && extents(a) == extents(b) && 
             num_of_points(a) == num_of_points(b) && num_of_cells(a) == num_of_cells(b) && 
             a.origin == b.origin && a.spacing == b.spacing && a.point_data == b.point_data && 
             a.cell_data == b.cell_data
 end
-function ==(a::T, b::T) where {T<:VTKMultiblockData}
+function ==(a::VTKMultiblockData, b::VTKMultiblockData)
     return length(a) == length(b) && a ⊆ b && b ⊆ a
 end
 function ==(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructuredData)
@@ -334,7 +334,7 @@ function ==(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructuredData)
 end
 =#
 
-function ==(a::T, b::T) where {T<:AbstractTimeSeriesVTKData}
+function ==(a::AbstractTimeSeriesVTKData, b::AbstractTimeSeriesVTKData)
     length(a) == length(b) || return false
     a.timemarkers == b.timemarkers || return false
     a.data == b.data || return false

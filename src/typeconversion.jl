@@ -6,6 +6,9 @@ function VTKRectilinearData(dataset::VTKUniformRectilinearData)
     point_coords = ntuple(j -> [dataset.origin[j] + (i-1)*dataset.spacing[j] for i in 1:_extents[j]], Val(_dim))
     return VTKRectilinearData(point_coords, dataset.point_data, dataset.cell_data)
 end
+function Base.convert(::Type{VTKRectilinearData}, dataset::VTKUniformRectilinearData)
+    return VTKRectilinearData(dataset)
+end
 
 function VTKStructuredData(dataset::VTKUniformRectilinearData)
     return VTKStructuredData(VTKRectilinearData(dataset))
@@ -33,6 +36,12 @@ function VTKStructuredData(dataset::VTKRectilinearData)
     end
     return VTKStructuredData(point_coords, dataset.point_data, dataset.cell_data)
 end
+function Base.convert(::Type{VTKStructuredData}, dataset::VTKUniformRectilinearData)
+    return VTKStructuredData(dataset)
+end
+function Base.convert(::Type{VTKStructuredData}, dataset::VTKRectilinearData)
+    return VTKStructuredData(dataset)
+end
 
 function VTKUnstructuredData(dataset::VTKPolyData)
     return VTKUnstructuredData(dataset.point_coords, dataset.cell_types, 
@@ -59,6 +68,16 @@ function VTKUnstructuredData(data_blocks::VTKMultiblockData)
         append!(combined_block, VTKUnstructuredData(block))
     end
     return combined_block
+end
+
+function Base.convert(::Type{VTKUnstructuredData}, dataset::VTKPolyData)
+    return VTKUntructuredData(dataset)
+end
+function Base.convert(::Type{VTKUnstructuredData}, dataset::AbstractVTKStructuredData)
+    return VTKUntructuredData(dataset)
+end
+function Base.convert(::Type{VTKUnstructuredData}, dataset::VTKMultiblockData)
+    return VTKUntructuredData(dataset)
 end
 
 function VTKPolyData(dataset::AbstractStaticVTKData)

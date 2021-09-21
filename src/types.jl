@@ -93,8 +93,8 @@ function VTKPolyData(   point_coords,
     return VTKPolyData( point_coords, 
                         cell_types, 
                         cell_connectivity, 
-                        point_data, 
-                        cell_data, 
+                        point_data,
+                        cell_data,
                         validate
                       )
 end
@@ -170,7 +170,7 @@ end
 function VTKUniformRectilinearData( origin, 
                                     spacing, 
                                     extents, 
-                                    validate::Bool = false
+                                    validate::Bool = false,
                                   )
     point_data = Dict{String, Array}()
     cell_data = Dict{String, Array}()

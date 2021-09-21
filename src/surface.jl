@@ -133,7 +133,7 @@ function add_cell_data!(dataset, _cell_data, m, cind)
     return
 end
 
-function extract_surface{T<:AbstractVTKUnstructuredData}(dataset::T)
+function extract_surface(dataset::T) where {T<:AbstractVTKUnstructuredData}
     if T <: VTKPolyData
         return dataset
     end
