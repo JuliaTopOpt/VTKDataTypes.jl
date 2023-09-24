@@ -24,7 +24,7 @@ function VTKUnstructuredData(   point_coords,
                                 point_data, 
                                 cell_data, 
                                 validate
-                            ) where T
+                            )
     dataset = VTKUnstructuredData(  point_coords, 
                                     cell_types, 
                                     cell_connectivity, 
