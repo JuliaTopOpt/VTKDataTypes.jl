@@ -27,7 +27,7 @@ function extract_surface(_dataset::AbstractVTKStructuredData)
                 add_cell_data!(dataset, _cell_data, m, cind)
             end
         end
-        
+
         if cind[2] == 1
             push!(faces, [hexa_cc[1], hexa_cc[2], hexa_cc[6], hexa_cc[5]])
             for m in keys(dataset.cell_data)
@@ -74,20 +74,25 @@ function extract_surface(_dataset::AbstractVTKStructuredData)
 
     k = 0
     for _face in faces
-        for (i,p) in enumerate(_face)
+        for (i, p) in enumerate(_face)
             _i = findfirst(point_inds, p)
             if _i > 0
                 _face[i] = _i
             else
                 k += 1
-                append!(_point_coords, dataset.point_coords[:,ind2sub(pextents, p)...])
+                append!(_point_coords, dataset.point_coords[:, ind2sub(pextents, p)...])
                 push!(point_inds, p)
                 for m in keys(dataset.point_data)
                     _var_dim = var_dim(dataset, m, "Point")
                     if _var_dim == 1
-                        push!(_point_data[m], dataset.point_data[m][ind2sub(pextents, p)...])
+                        push!(
+                            _point_data[m], dataset.point_data[m][ind2sub(pextents, p)...]
+                        )
                     else
-                        append!(_point_data[m], dataset.point_data[m][:, ind2sub(pextents, p)...])
+                        append!(
+                            _point_data[m],
+                            dataset.point_data[m][:, ind2sub(pextents, p)...],
+                        )
                     end
                 end
                 _face[i] = k
@@ -130,7 +135,7 @@ function add_cell_data!(dataset, _cell_data, m, cind)
         _cd = dataset.cell_data[m][:, cind...]
         append!(_cell_data[m], _cd)
     end
-    return
+    return nothing
 end
 
 function extract_surface(dataset::T) where {T<:AbstractVTKUnstructuredData}
@@ -140,14 +145,18 @@ function extract_surface(dataset::T) where {T<:AbstractVTKUnstructuredData}
     if dim(dataset) == 2
         return VTKPolyData(dataset)
     end
-    
+
     #Sorted inds and cell type are keys
     #Cell connectivity, cell count, and cell data are the values
 
-    cell_register = Dict{Tuple{Vector{Int}, Int}, Tuple{Vector{Int}, _Counter, typeof(dataset.cell_data)}}()
+    cell_register = Dict{
+        Tuple{Vector{Int},Int},Tuple{Vector{Int},_Counter,typeof(dataset.cell_data)}
+    }()
     for i in 1:length(dataset.cell_connectivity)
         if dataset.cell_types[i] ∉ POLY_CELLS
-            _cells, _types = decompose_cell(dataset.cell_connectivity[i], dataset.cell_types[i], target="Faces")
+            _cells, _types = decompose_cell(
+                dataset.cell_connectivity[i], dataset.cell_types[i]; target="Faces"
+            )
         else
             _cells, _types = [dataset.cell_connectivity[i]], [dataset.cell_types[i]]
         end
@@ -162,7 +171,7 @@ function extract_surface(dataset::T) where {T<:AbstractVTKUnstructuredData}
                     if _var_dim == 1
                         cell_register[_key][3][m] = [dataset.cell_data[m][i]]
                     else
-                        cell_register[_key][3][m] = dataset.cell_data[m][:,i]
+                        cell_register[_key][3][m] = dataset.cell_data[m][:, i]
                     end
                 end
             end
@@ -204,20 +213,20 @@ function extract_surface(dataset::T) where {T<:AbstractVTKUnstructuredData}
 
     k = 0
     for _cc in _cell_connectivity
-        for (i,p) in enumerate(_cc)
+        for (i, p) in enumerate(_cc)
             _i = findfirst(point_inds, p)
             if _i > 0
                 _cc[i] = _i
             else
                 k += 1
-                append!(_point_coords, dataset.point_coords[:,p])
+                append!(_point_coords, dataset.point_coords[:, p])
                 push!(point_inds, p)
                 for m in keys(dataset.point_data)
                     _var_dim = var_dim(dataset, m, "Point")
                     if _var_dim == 1
                         push!(_point_data[m], dataset.point_data[m][p])
                     else
-                        append!(_point_data[m], dataset.point_data[m][:,p])
+                        append!(_point_data[m], dataset.point_data[m][:, p])
                     end
                 end
                 _cc[i] = k
@@ -233,5 +242,7 @@ function extract_surface(dataset::T) where {T<:AbstractVTKUnstructuredData}
         end
     end
 
-    return VTKPolyData(_point_coords, _cell_types, _cell_connectivity, _point_data, _cell_data)
+    return VTKPolyData(
+        _point_coords, _cell_types, _cell_connectivity, _point_data, _cell_data
+    )
 end

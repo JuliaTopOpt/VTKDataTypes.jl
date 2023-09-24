@@ -1,7 +1,7 @@
 # This is an example that shows you how to create VTK data types natively in Julia
 
 using VTKDataTypes
-import GeometryTypes
+using GeometryTypes: GeometryTypes
 
 function create_image()
     origin = (0.0, 0.0, 0.0)
@@ -18,32 +18,32 @@ function create_image()
     image.point_data["Point vector data"] = zeros(3, extents(image)...)
     image.cell_data["Cell vector data"] = zeros(3, cell_extents(image)...)
 
-    @test cell_connectivity(image, (1,1,1)) == [1, 2, 3, 4, 7, 8, 9, 10]
-        #Used to obtain the points which make up the cell in VTK convention
-    @test cell_type(image, (1,1,1)) == 11
-        #Used to obtain the VTK cell type
+    @test cell_connectivity(image, (1, 1, 1)) == [1, 2, 3, 4, 7, 8, 9, 10]
+    #Used to obtain the points which make up the cell in VTK convention
+    @test cell_type(image, (1, 1, 1)) == 11
+    #Used to obtain the VTK cell type
 
     @test image == deepcopy(image)
     return image
 end
 
 function create_rectilinear_data1()
-    x = y = z = collect(range(-2, stop=2, length=5))
+    x = y = z = collect(range(-2; stop=2, length=5))
 
     rectilinear = VTKRectilinearData((x, y, z))
     @test dim(rectilinear) == 3
-    @test extents(rectilinear) == (5,5,5)
-    @test cell_extents(rectilinear) == (4,4,4)
+    @test extents(rectilinear) == (5, 5, 5)
+    @test cell_extents(rectilinear) == (4, 4, 4)
 
     rectilinear.point_data["Point scalar data"] = zeros(extents(rectilinear)...)
     rectilinear.cell_data["Cell scalar data"] = zeros(cell_extents(rectilinear)...)
     rectilinear.point_data["Point vector data"] = zeros(3, extents(rectilinear)...)
     rectilinear.cell_data["Cell vector data"] = zeros(3, cell_extents(rectilinear)...)
 
-    @test cell_connectivity(rectilinear, (1,1,1)) == [1, 2, 7, 6, 26, 27, 32, 31]
-        #Used to obtain the points which make up the cell in VTK convention
-    @test cell_type(rectilinear, (1,1,1)) == 12
-        #Used to obtain the VTK cell type
+    @test cell_connectivity(rectilinear, (1, 1, 1)) == [1, 2, 7, 6, 26, 27, 32, 31]
+    #Used to obtain the points which make up the cell in VTK convention
+    @test cell_type(rectilinear, (1, 1, 1)) == 12
+    #Used to obtain the VTK cell type
 
     @test rectilinear == deepcopy(rectilinear)
     return rectilinear
@@ -54,8 +54,8 @@ function create_rectilinear_data2()
     rectilinear = VTKRectilinearData(image)
 
     @test dim(rectilinear) == dim(image) == 3
-    @test extents(rectilinear) == extents(image) == (2,3,5)
-    @test cell_extents(rectilinear) == cell_extents(image) == (1,2,4)
+    @test extents(rectilinear) == extents(image) == (2, 3, 5)
+    @test cell_extents(rectilinear) == cell_extents(image) == (1, 2, 4)
 
     return rectilinear
 end
@@ -63,10 +63,10 @@ end
 function create_structured_data()
     rectilinear = create_rectilinear_data1()
     structured = VTKStructuredData(rectilinear)
-    @test size(structured.point_coords) == (3,extents(rectilinear)...) == (3,5,5,5)
+    @test size(structured.point_coords) == (3, extents(rectilinear)...) == (3, 5, 5, 5)
 
-    @test extents(structured) == extents(rectilinear) == (5,5,5)
-    @test cell_extents(structured) == cell_extents(rectilinear) == (4,4,4)
+    @test extents(structured) == extents(rectilinear) == (5, 5, 5)
+    @test cell_extents(structured) == cell_extents(rectilinear) == (4, 4, 4)
     @test dim(structured) == dim(rectilinear) == 3
 
     structured.point_data["Point scalar data"] = zeros(extents(structured)...)
@@ -74,10 +74,10 @@ function create_structured_data()
     structured.point_data["Point vector data"] = zeros(3, extents(structured)...)
     structured.cell_data["Cell vector data"] = zeros(3, cell_extents(structured)...)
 
-    @test cell_connectivity(structured, (1,1,1)) == [1, 2, 7, 6, 26, 27, 32, 31]
-        #Used to obtain the points which make up the cell in VTK convention
-    @test cell_type(structured, (1,1,1)) == 12
-        #Used to obtain the VTK cell type
+    @test cell_connectivity(structured, (1, 1, 1)) == [1, 2, 7, 6, 26, 27, 32, 31]
+    #Used to obtain the points which make up the cell in VTK convention
+    @test cell_type(structured, (1, 1, 1)) == 12
+    #Used to obtain the VTK cell type
 
     @test structured == deepcopy(structured)
     return structured
@@ -91,7 +91,8 @@ function create_unstructured_data()
 
     @test length(unstruct1.cell_connectivity) == length(unstruct1.cell_types)
     @test size(unstruct1.point_coords) == (dim(unstruct1), num_of_points(unstruct1))
-    @test size(unstruct1.point_data["Point scalar data"], 1) == size(unstruct1.point_coords, 2)
+    @test size(unstruct1.point_data["Point scalar data"], 1) ==
+        size(unstruct1.point_coords, 2)
     @test size(unstruct1.cell_data["Cell vector data"]) == (3, num_of_cells(unstruct1))
 
     @test unstruct1 == unstruct2
@@ -104,12 +105,13 @@ end
 
 function create_poly_data()
     rectilinear = create_rectilinear_data1()
-    polydata = VTKPolyData(rectilinear) 
-        # automatically decomposes linear volume cells to faces and averages cell data
+    polydata = VTKPolyData(rectilinear)
+    # automatically decomposes linear volume cells to faces and averages cell data
 
     @test length(polydata.cell_connectivity) == length(polydata.cell_types)
     @test size(polydata.point_coords) == (dim(polydata), num_of_points(polydata))
-    @test size(polydata.point_data["Point scalar data"], 1) == size(polydata.point_coords, 2)
+    @test size(polydata.point_data["Point scalar data"], 1) ==
+        size(polydata.point_coords, 2)
     @test size(polydata.cell_data["Cell vector data"]) == (3, num_of_cells(polydata))
 
     @test polydata == polydata
@@ -117,8 +119,13 @@ function create_poly_data()
 end
 
 function create_multiblock_data()
-    mb = VTKMultiblockData((create_image(), create_rectilinear_data1(), 
-        create_structured_data(), create_unstructured_data(), create_poly_data()))
+    mb = VTKMultiblockData((
+        create_image(),
+        create_rectilinear_data1(),
+        create_structured_data(),
+        create_unstructured_data(),
+        create_poly_data(),
+    ))
     @test length(mb) == 5
     for b in mb
         @test isa(b, AbstractVTKSimpleData)
@@ -135,41 +142,45 @@ function create_timeseries_data()
     timemarkers = [0, 0.5, 1, 1.5]
 
     #2D polydata
-    x = y = [0., 1., 2.];
-    point_coords = (x, y);
-    point_data = Dict{String, Array{Float64}}();
-    cell_data = Dict{String, Array{Float64}}();
-    a = VTKRectilinearData(point_coords, point_data, cell_data);
-    a.cell_data["Color"] = reshape(rand(num_of_cells(a)), cell_extents(a));
-    b = VTKPolyData(a);
+    x = y = [0.0, 1.0, 2.0]
+    point_coords = (x, y)
+    point_data = Dict{String,Array{Float64}}()
+    cell_data = Dict{String,Array{Float64}}()
+    a = VTKRectilinearData(point_coords, point_data, cell_data)
+    a.cell_data["Color"] = reshape(rand(num_of_cells(a)), cell_extents(a))
+    b = VTKPolyData(a)
 
-    x = y = [3., 4., 5.];
-    point_coords = (x, y);
-    c = VTKPolyData(VTKRectilinearData(point_coords, point_data, cell_data));
-    c.cell_data["Color"] = rand(num_of_cells(c));
+    x = y = [3.0, 4.0, 5.0]
+    point_coords = (x, y)
+    c = VTKPolyData(VTKRectilinearData(point_coords, point_data, cell_data))
+    c.cell_data["Color"] = rand(num_of_cells(c))
 
-    m = VTKMultiblockData((b, c));
-    timeseries = VTKTimeSeriesData([0.], [m]);
+    m = VTKMultiblockData((b, c))
+    timeseries = VTKTimeSeriesData([0.0], [m])
 
-    no_of_timesteps = 5;
-    timestep = 0.5;
-    speed = 1;
+    no_of_timesteps = 5
+    timestep = 0.5
+    speed = 1
     i = 0
     while i < no_of_timesteps
-        i += 1;
-        new_data = deepcopy(timeseries.data[i]);
+        i += 1
+        new_data = deepcopy(timeseries.data[i])
 
         #Random walk of first dataset
-        new_data[1].point_coords = new_data[1].point_coords + 
-            vcat(fill(speed*rand()-speed/2, (1,num_of_points(new_data[1]))),  
-            fill(speed*rand()-speed/2, (1,num_of_points(new_data[1]))));
-                
-        #Random walk of second dataset
-        new_data[2].point_coords = new_data[2].point_coords + 
-            vcat(fill(speed*rand()-speed/2, (1,num_of_points(new_data[2]))), 
-            fill(speed*rand()-speed/2, (1,num_of_points(new_data[2]))));
+        new_data[1].point_coords =
+            new_data[1].point_coords + vcat(
+                fill(speed * rand() - speed / 2, (1, num_of_points(new_data[1]))),
+                fill(speed * rand() - speed / 2, (1, num_of_points(new_data[1]))),
+            )
 
-        insert_timed_data!(timeseries, i*timestep, new_data);
+        #Random walk of second dataset
+        new_data[2].point_coords =
+            new_data[2].point_coords + vcat(
+                fill(speed * rand() - speed / 2, (1, num_of_points(new_data[2]))),
+                fill(speed * rand() - speed / 2, (1, num_of_points(new_data[2]))),
+            )
+
+        insert_timed_data!(timeseries, i * timestep, new_data)
     end
 
     for ts in timeseries

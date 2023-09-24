@@ -7,7 +7,7 @@ function same_geometry(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructure
     b_image_point_inds = zeros(Int, _num_of_points)
     for i in 1:_num_of_points
         for j in 1:_num_of_points
-            @views if b.point_coords[:,i] == a.point_coords[:,j]
+            @views if b.point_coords[:, i] == a.point_coords[:, j]
                 b_image_point_inds[i] = j
                 break
             end
@@ -22,7 +22,7 @@ function same_geometry(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructure
         for i in 1:length(b_cell_connectivity)
             b_cell_connectivity_mapped[i] = b_image_point_inds[b_cell_connectivity[i]]
         end
-        b_cell_connectivity_mapped
+        return b_cell_connectivity_mapped
     end
 
     _num_of_cells = num_of_cells(a)
@@ -30,7 +30,12 @@ function same_geometry(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructure
     b_image_cell_inds = zeros(Int, _num_of_cells)
     for i in 1:_num_of_cells
         for j in 1:_num_of_cells
-            if similar_cells(b_cell_connectivity_mapped[i], cell_type(b,i), a.cell_connectivity[j], cell_type(a,j))
+            if similar_cells(
+                b_cell_connectivity_mapped[i],
+                cell_type(b, i),
+                a.cell_connectivity[j],
+                cell_type(a, j),
+            )
                 b_image_cell_inds[i] = j
                 break
             end
@@ -38,7 +43,7 @@ function same_geometry(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructure
         if b_image_cell_inds[i] == 0
             return false
         end
-    end    
+    end
     return true
 end
 function same_geometry(a::VTKStructuredData, b::VTKStructuredData)
@@ -51,28 +56,39 @@ function same_geometry(a::VTKUniformRectilinearData, b::VTKUniformRectilinearDat
     return a.spacing == b.spacing && extents(a) == extents(b)
 end
 function same_geometry(a::AbstractStaticVTKData, b::AbstractStaticVTKData)
-    return same_geometry(promote(a,b)...)
+    return same_geometry(promote(a, b)...)
 end
-function same_ordered_geometry(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructuredData)
+function same_ordered_geometry(
+    a::AbstractVTKUnstructuredData, b::AbstractVTKUnstructuredData
+)
     dim(a) != dim(b) && return false
     num_of_points(a) != num_of_points(b) && return false
     num_of_cells(a) != num_of_cells(b) && return false
-    
+
     _num_of_points = num_of_points(a)
     @views for i in 1:_num_of_points
-        b.point_coords[:,i] == a.point_coords[:,i] || return false
+        b.point_coords[:, i] == a.point_coords[:, i] || return false
     end
 
     _num_of_cells = num_of_cells(a)
     for i in 1:_num_of_cells
-        similar_cells(a.cell_connectivity[i], cell_type(a,i), b.cell_connectivity[i], cell_type(b,i)) || return false
+        similar_cells(
+            a.cell_connectivity[i], cell_type(a, i), b.cell_connectivity[i], cell_type(b, i)
+        ) || return false
     end
     return true
 end
 function same_ordered_geometry(a::AbstractVTKMultiblockData, b::AbstractVTKMultiblockData)
     length(a) == length(b) || return false
     for i in 1:length(a)
-        typeof(a[i]) == typeof(b[i]) && (typeof(a[i]) <: AbstractVTKMultiblockData || typeof(a[i]) <: AbstractVTKUnstructuredData ? same_ordered_geometry(a[i], b[i]) : a[i] == b[i]) || return false
+        typeof(a[i]) == typeof(b[i]) && (
+            if typeof(a[i]) <: AbstractVTKMultiblockData ||
+               typeof(a[i]) <: AbstractVTKUnstructuredData
+                same_ordered_geometry(a[i], b[i])
+            else
+                a[i] == b[i]
+            end
+        ) || return false
     end
     return true
 end
@@ -90,19 +106,23 @@ function same_geometry_shape(a::AbstractVTKUnstructuredData, b::AbstractVTKUnstr
     dim(a) != dim(b) && return false
     num_of_points(a) != num_of_points(b) && return false
     num_of_cells(a) != num_of_cells(b) && return false
-    
+
     _num_of_cells = num_of_cells(a)
     for i in 1:_num_of_cells
-        similar_cells(a.cell_connectivity[i], cell_type(a,i), b.cell_connectivity[i], cell_type(b,i)) || return false
+        similar_cells(
+            a.cell_connectivity[i], cell_type(a, i), b.cell_connectivity[i], cell_type(b, i)
+        ) || return false
     end
     return true
 end
 same_geometry_shape(a::AbstractStaticVTKData, b::AbstractStaticVTKData) = false
 
-function same_ordered_geometry_shape(a::AbstractVTKMultiblockData, b::AbstractVTKMultiblockData)
+function same_ordered_geometry_shape(
+    a::AbstractVTKMultiblockData, b::AbstractVTKMultiblockData
+)
     length(a) == length(b) || return false
     for i in 1:length(a)
-        typeof(a[i]) == typeof(b[i]) || return false 
+        typeof(a[i]) == typeof(b[i]) || return false
         if typeof(a[i]) <: AbstractVTKMultiblockData
             same_ordered_geometry_shape(a[i], b[i]) || return false
         else

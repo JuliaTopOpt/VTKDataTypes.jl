@@ -1,4 +1,6 @@
-function decompose(dataset::AbstractVTKUnstructuredData, target::String = "Faces", decompose_cell_data = false)
+function decompose(
+    dataset::AbstractVTKUnstructuredData, target::String="Faces", decompose_cell_data=false
+)
     if decompose_cell_data
         return decompose_with_cell_data(dataset, target)
     else
@@ -10,7 +12,9 @@ mutable struct _Counter
     a::Int
 end
 
-function decompose_with_cell_data(dataset::AbstractVTKUnstructuredData, target::String="Faces")
+function decompose_with_cell_data(
+    dataset::AbstractVTKUnstructuredData, target::String="Faces"
+)
     if target == "Faces"
         filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
     elseif target == "Lines"
@@ -19,17 +23,22 @@ function decompose_with_cell_data(dataset::AbstractVTKUnstructuredData, target::
 
     point_coords = dataset.point_coords
     point_data = dataset.point_data
-    
+
     #Sorted inds and cell type are keys
     #Cell connectivity, cell count, and cell data are the values
 
-    cell_register = Dict{Tuple{Vector{Int}, Int}, Tuple{Vector{Int}, _Counter, typeof(dataset.cell_data)}}()
+    cell_register = Dict{
+        Tuple{Vector{Int},Int},Tuple{Vector{Int},_Counter,typeof(dataset.cell_data)}
+    }()
     for i in 1:length(dataset.cell_connectivity)
         if target == "Points"
-            _cells, _types = [[k] for k in dataset.cell_connectivity[i]], [1 for k in 1:length(dataset.cell_connectivity[i])]
+            _cells, _types = [[k] for k in dataset.cell_connectivity[i]],
+            [1 for k in 1:length(dataset.cell_connectivity[i])]
         else
-            _cells, _types = decompose_cell(dataset.cell_connectivity[i], dataset.cell_types[i], target=target)
-        end        
+            _cells, _types = decompose_cell(
+                dataset.cell_connectivity[i], dataset.cell_types[i]; target=target
+            )
+        end
         for j in 1:length(_cells)
             _key = (sort(_cells[j]), _types[j])
             if haskey(cell_register, _key)
@@ -39,7 +48,7 @@ function decompose_with_cell_data(dataset::AbstractVTKUnstructuredData, target::
                     if _var_dim == 1
                         cell_register[_key][3][m] += dataset.cell_data[m][i:i]
                     else
-                        @views cell_register[_key][3][m] += dataset.cell_data[m][:,i:i]
+                        @views cell_register[_key][3][m] += dataset.cell_data[m][:, i:i]
                     end
                 end
             else
@@ -49,7 +58,7 @@ function decompose_with_cell_data(dataset::AbstractVTKUnstructuredData, target::
                     if _var_dim == 1
                         cell_register[_key][3][m] = dataset.cell_data[m][i:i]
                     else
-                        @views cell_register[_key][3][m] = dataset.cell_data[m][:,i:i]
+                        @views cell_register[_key][3][m] = dataset.cell_data[m][:, i:i]
                     end
                 end
             end
@@ -78,7 +87,7 @@ function decompose_with_cell_data(dataset::AbstractVTKUnstructuredData, target::
             if _var_dim == 1
                 cell_data[m][i] = v[3][m][1]
             else
-                cell_data[m][:,i:i] = v[3][m]
+                cell_data[m][:, i:i] = v[3][m]
             end
         end
         _cell_connectivity[i] = v[1]
@@ -88,9 +97,9 @@ function decompose_with_cell_data(dataset::AbstractVTKUnstructuredData, target::
     return VTKPolyData(point_coords, _cell_types, _cell_connectivity, point_data, cell_data)
 end
 
-function decompose_no_cell_data(dataset::AbstractVTKUnstructuredData, 
-                                target::String = "Faces"
-                               )
+function decompose_no_cell_data(
+    dataset::AbstractVTKUnstructuredData, target::String="Faces"
+)
     if target == "Faces"
         filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
     elseif target == "Lines"
@@ -99,16 +108,19 @@ function decompose_no_cell_data(dataset::AbstractVTKUnstructuredData,
 
     point_coords = dataset.point_coords
     point_data = dataset.point_data
-    
+
     #Sorted inds and cell type are keys
     #Cell connectivity is the value
-    cell_register = Dict{Tuple{Vector{Int}, Int}, Vector{Int}}()
+    cell_register = Dict{Tuple{Vector{Int},Int},Vector{Int}}()
     for i in 1:length(dataset.cell_connectivity)
         if target == "Points"
-            _cells, _types =  [[k] for k in dataset.cell_connectivity[i]], [1 for k in 1:length(dataset.cell_connectivity[i])]
+            _cells, _types = [[k] for k in dataset.cell_connectivity[i]],
+            [1 for k in 1:length(dataset.cell_connectivity[i])]
         else
-            _cells, _types = decompose_cell(dataset.cell_connectivity[i], dataset.cell_types[i], target=target)
-        end        
+            _cells, _types = decompose_cell(
+                dataset.cell_connectivity[i], dataset.cell_types[i]; target=target
+            )
+        end
         for j in 1:length(_cells)
             _key = (sort(_cells[j]), _types[j])
             if !haskey(cell_register, _key)

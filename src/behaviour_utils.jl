@@ -1,4 +1,6 @@
-function filter_cells!(dataset::AbstractVTKUnstructuredData, cell_types_to_remove::Vector{Int})
+function filter_cells!(
+    dataset::AbstractVTKUnstructuredData, cell_types_to_remove::Vector{Int}
+)
     inds = findall(i -> i in cell_types_to_remove, dataset.cell_types)
     deleteat!(dataset.cell_types, inds)
     deleteat!(dataset.cell_connectivity, inds)
@@ -7,7 +9,9 @@ function filter_cells!(dataset::AbstractVTKUnstructuredData, cell_types_to_remov
         if _var_dim == 1
             deleteat!(dataset.cell_data[m], inds)
         else
-            dataset.cell_data[m] = dataset.cell_data[m][:,setdiff(1:num_of_cells(dataset), inds)]
+            dataset.cell_data[m] = dataset.cell_data[m][
+                :, setdiff(1:num_of_cells(dataset), inds)
+            ]
         end
     end
     return dataset
@@ -19,20 +23,30 @@ end
 function keep_face_cells_only!(dataset::VTKPolyData)
     return filter_cells!(dataset, [POINT_CELLS; LINE_CELLS])
 end
-function add_new_cell!( dataset::AbstractVTKUnstructuredData, 
-                        _cell_type::Int, 
-                        _cell_connectivity, 
-                        _filter::Bool = true
-                      )
+function add_new_cell!(
+    dataset::AbstractVTKUnstructuredData,
+    _cell_type::Int,
+    _cell_connectivity,
+    _filter::Bool=true,
+)
     TData = typeof(dataset)
     begin
-        out = true
-        for i in 1:length(dataset.cell_connectivity)
-            (out = !similar_cells(dataset.cell_connectivity[i], cell_type(dataset, i), 
-                _cell_connectivity, _cell_type)) || break
-        end
-        out
-    end || _filter && (return num_of_cells(dataset)) || throw("$(TData): Repeat cells are not allowed.")
+            out = true
+            for i in 1:length(dataset.cell_connectivity)
+                (
+                    out =
+                        !similar_cells(
+                            dataset.cell_connectivity[i],
+                            cell_type(dataset, i),
+                            _cell_connectivity,
+                            _cell_type,
+                        )
+                ) || break
+            end
+            out
+        end ||
+        _filter && (return num_of_cells(dataset)) ||
+        throw("$(TData): Repeat cells are not allowed.")
 
     push!(dataset.cell_connectivity, _cell_connectivity)
     push!(dataset.cell_types, _cell_type)
@@ -41,7 +55,8 @@ function add_new_cell!( dataset::AbstractVTKUnstructuredData,
         if _var_dim == 1
             dataset.cell_data[m] = [dataset.cell_data[m]; [0]]
         else
-            dataset.cell_data[m] = [dataset.cell_data[m] zeros(size(dataset.cell_data[m], 1))]
+            dataset.cell_data[m] =
+                [dataset.cell_data[m] zeros(size(dataset.cell_data[m], 1))]
         end
     end
     return num_of_cells(dataset)
@@ -53,11 +68,15 @@ function remove_cell!(dataset::AbstractVTKUnstructuredData, cell_ind::Int)
     for m in keys(dataset.cell_data)
         _var_dim = var_dim(dataset, m, "Cell")
         if _var_dim == 1
-            dataset.cell_data[m] = vcat(dataset.cell_data[m][1:cell_ind-1], 
-                                            dataset.cell_data[m][cell_ind+1:end])
+            dataset.cell_data[m] = vcat(
+                dataset.cell_data[m][1:(cell_ind - 1)],
+                dataset.cell_data[m][(cell_ind + 1):end],
+            )
         else
-            dataset.cell_data[m] = hcat(dataset.cell_data[m][:, 1:cell_ind-1], 
-                                            dataset.cell_data[m][:, cell_ind+1:end])
+            dataset.cell_data[m] = hcat(
+                dataset.cell_data[m][:, 1:(cell_ind - 1)],
+                dataset.cell_data[m][:, (cell_ind + 1):end],
+            )
         end
     end
     return num_of_cells(dataset)
@@ -83,10 +102,9 @@ remove_block!(dataset::AbstractVTKMultiblockData, ind::Int) = deleteat!(dataset.
 function remove_block!(dataset::AbstractVTKMultiblockData, block::AbstractVTKMultiblockData)
     return deleteat!(dataset.blocks, findin(dataset.blocks, block))
 end
-function insert_timed_data!(dataset::VTKTimeSeriesData{TTime, TData}, 
-                            time::TTime, 
-                            data::TData
-                           ) where {TTime<:Real, TData<:AbstractStaticVTKData}
+function insert_timed_data!(
+    dataset::VTKTimeSeriesData{TTime,TData}, time::TTime, data::TData
+) where {TTime<:Real,TData<:AbstractStaticVTKData}
     loc = searchsorted(dataset.timemarkers, time)
     if loc.start == length(dataset) + 1 && loc.stop == length(dataset)
         push!(dataset.timemarkers, time)
@@ -100,13 +118,13 @@ function insert_timed_data!(dataset::VTKTimeSeriesData{TTime, TData},
     end
 end
 
-function remove_timed_data!(dataset::VTKTimeSeriesData{TTime, TData}, 
-                            _time::TTime
-                           ) where {TTime<:Real, TData<:AbstractStaticVTKData}
+function remove_timed_data!(
+    dataset::VTKTimeSeriesData{TTime,TData}, _time::TTime
+) where {TTime<:Real,TData<:AbstractStaticVTKData}
     ind = findin(dataset.timemarkers, _time)
     if typeof(ind) == Int
         deleteat!(dataset.timemarkers, ind)
-        deleteat!(dataset.data, ind) 
+        deleteat!(dataset.data, ind)
     else
         throw("No data at time $_time.")
     end
@@ -122,14 +140,18 @@ function remove_timed_data!(dataset::VTKTimeSeriesData, ind::Int)
 end
 
 function increase_resolution!(dataset::VTKTimeSeriesData, resolution::Int)
-    _times = deepcopy(collect(zip(dataset.timemarkers[1:end-1], dataset.timemarkers[2:end])))
+    _times = deepcopy(
+        collect(zip(dataset.timemarkers[1:(end - 1)], dataset.timemarkers[2:end]))
+    )
     for (t1, t2) in _times
-        _step = (t2-t1)/resolution
-        for j in 1:resolution-1
-            VTKDataTypes.insert_timed_data!(dataset, Float64(t1+j*_step), dataset[t1+j*_step])
+        _step = (t2 - t1) / resolution
+        for j in 1:(resolution - 1)
+            VTKDataTypes.insert_timed_data!(
+                dataset, Float64(t1 + j * _step), dataset[t1 + j * _step]
+            )
         end
     end
-    return
+    return nothing
 end
 
 @resumable function simple_block_generator(multiblock::VTKMultiblockData)
@@ -146,10 +168,10 @@ end
 
 function dim3!(a::AbstractVTKUnstructuredData)
     if dim(a) == 3
-        return
+        return nothing
     elseif dim(a) == 2
-        a.point_coords = [a.point_coords; zeros(1,num_of_points(a))]
-        return
+        a.point_coords = [a.point_coords; zeros(1, num_of_points(a))]
+        return nothing
     else
         throw("Invalid dimension.")
     end
@@ -157,7 +179,7 @@ end
 
 function dim3!(a::VTKUniformRectilinearData)
     if dim(a) == 3
-        return
+        return nothing
     elseif dim(a) == 2
         a.origin = [a.origin; 0]
         a.spacing = [a.spacing; 0]
@@ -168,8 +190,8 @@ function dim3!(a::VTKUniformRectilinearData)
         for m in keys(a.cell_data)
             a.cell_data[m] = reshape(a.cell_data[m], (size(a.cell_data[m])..., 1))
         end
-    
-        return
+
+        return nothing
     else
         throw("Invalid dimension.")
     end
@@ -177,7 +199,7 @@ end
 
 function dim3!(a::VTKRectilinearData)
     if dim(a) == 3
-        return
+        return nothing
     elseif dim(a) == 2
         a.point_coords = [a.point_coords; [0]]
         for m in keys(a.point_data)
@@ -186,8 +208,8 @@ function dim3!(a::VTKRectilinearData)
         for m in keys(a.cell_data)
             a.cell_data[m] = reshape(a.cell_data[m], (size(a.cell_data[m])..., 1))
         end
-    
-        return
+
+        return nothing
     else
         throw("Invalid dimension.")
     end
@@ -195,17 +217,19 @@ end
 
 function dim3!(a::VTKStructuredData)
     if dim(a) == 3
-        return
+        return nothing
     elseif dim(a) == 2
-        a.point_coords = reshape(cat(1, a.point_coords, zeros(1,extents(a)...)), (3, extents(a), 1))
+        a.point_coords = reshape(
+            cat(1, a.point_coords, zeros(1, extents(a)...)), (3, extents(a), 1)
+        )
         for m in keys(a.point_data)
             a.point_data[m] = reshape(a.point_data[m], (size(a.point_data[m])..., 1))
         end
         for m in keys(a.cell_data)
             a.cell_data[m] = reshape(a.cell_data[m], (size(a.cell_data[m])..., 1))
         end
-    
-        return
+
+        return nothing
     else
         throw("Invalid dimension.")
     end
@@ -213,12 +237,12 @@ end
 
 function dim3!(a::VTKMultiblockData)
     if dim(a) == 3
-        return
+        return nothing
     elseif dim(a) == 2
         for block in simple_block_generator(a)
             dim3!(block)
         end
-        return
+        return nothing
     else
         throw("Invalid dimension.")
     end
@@ -226,12 +250,12 @@ end
 
 function dim3!(a::VTKTimeSeriesData)
     if dim(a) == 3
-        return
+        return nothing
     elseif dim(a) == 2
         for timedblock in a
             dim3!(timedblock)
         end
-        return
+        return nothing
     else
         throw("Invalid dimension.")
     end
@@ -258,7 +282,7 @@ function celldata_to_pointdata!(dataset::AbstractVTKUnstructuredData)
             if _var_dim == 1
                 point_data[m][j] += dataset.cell_data[m][i]
             else
-                @views point_data[m][:,j] += dataset.cell_data[m][:,i]
+                @views point_data[m][:, j] += dataset.cell_data[m][:, i]
             end
         end
     end
@@ -273,5 +297,5 @@ function celldata_to_pointdata!(dataset::AbstractVTKUnstructuredData)
     end
     empty!(dataset.cell_data)
 
-    return
+    return nothing
 end

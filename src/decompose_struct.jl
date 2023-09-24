@@ -1,4 +1,6 @@
-function decompose(_dataset::AbstractVTKStructuredData, target::String = "Faces", decompose_cell_data = false)
+function decompose(
+    _dataset::AbstractVTKStructuredData, target::String="Faces", decompose_cell_data=false
+)
     dataset = VTKStructuredData(_dataset)
     _dim = dim(dataset)
 
@@ -108,16 +110,22 @@ function decompose_to_faces_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][:, cind...] +
-                        dataset.cell_data[m][:, cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][:, cind...]
                 end
@@ -130,16 +138,22 @@ function decompose_to_faces_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[2] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1],cind[2]-1,cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][:, cind...] +
-                        dataset.cell_data[m][:, cind[1],cind[2]-1,cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][:, cind...]
                 end
@@ -152,16 +166,22 @@ function decompose_to_faces_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[1] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1]-1,cind[2:3]...]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2:3]...]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][:, cind...] +
-                        dataset.cell_data[m][:, cind[1]-1,cind[2:3]...]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2:3]...]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][:, cind...]
                 end
@@ -251,18 +271,24 @@ function decompose_to_lines_2d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[2] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1], cind[2]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[2] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1],cind[2]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1]
+                        ) / 2
                 else
-                    _cd = dataset.cell_data[m][:,cind...]
+                    _cd = dataset.cell_data[m][:, cind...]
                 end
                 append!(_cell_data[m], _cd)
             end
@@ -273,18 +299,24 @@ function decompose_to_lines_2d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[1] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1]-1, cind[2]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2]]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[1] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1]-1,cind[2]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2]]
+                        ) / 2
                 else
-                    _cd = dataset.cell_data[m][:,cind...]
+                    _cd = dataset.cell_data[m][:, cind...]
                 end
                 append!(_cell_data[m], _cd)
             end
@@ -298,7 +330,7 @@ function decompose_to_lines_2d_with_cell_data(dataset::VTKStructuredData)
                     _cd = dataset.cell_data[m][cind...]
                     push!(_cell_data[m], _cd)
                 else
-                    _cd = dataset.cell_data[m][:,cind...]
+                    _cd = dataset.cell_data[m][:, cind...]
                     append!(_cell_data[m], _cd)
                 end
             end
@@ -311,7 +343,7 @@ function decompose_to_lines_2d_with_cell_data(dataset::VTKStructuredData)
                     _cd = dataset.cell_data[m][cind...]
                     push!(_cell_data[m], _cd)
                 else
-                    _cd = dataset.cell_data[m][:,cind...]
+                    _cd = dataset.cell_data[m][:, cind...]
                     append!(_cell_data[m], _cd)
                 end
             end
@@ -359,34 +391,52 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[2] != 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1:2]...,cind[3]-1] + 
-                        dataset.cell_data[m][cind[1],cind[2]-1,cind[3]] + 
-                        dataset.cell_data[m][cind[1],cind[2]-1,cind[3]-1]) / 4                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1:2]..., cind[3] - 1] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1, cind[3] - 1]
+                        ) / 4
                 elseif cind[2] == 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 elseif cind[2] != 1 && cind[3] == 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1], cind[2]-1,cind[3]]) / 2                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 elseif cind[2] == cind[3] == 1
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[2] != 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1:2]...,cind[3]-1] + 
-                        dataset.cell_data[m][:,cind[1],cind[2]-1,cind[3]] + 
-                        dataset.cell_data[m][:,cind[1],cind[2]-1,cind[3]-1]) / 4                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3] - 1]
+                        ) / 4
                 elseif cind[2] == 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 elseif cind[2] != 1 && cind[3] == 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1], cind[2]-1,cind[3]]) / 2                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 elseif cind[2] == cind[3] == 1
-                    _cd = dataset.cell_data[m][:,cind...]
+                    _cd = dataset.cell_data[m][:, cind...]
                 end
                 append!(_cell_data[m], _cd)
             end
@@ -397,34 +447,52 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[1] != 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1:2]...,cind[3]-1] + 
-                        dataset.cell_data[m][cind[1]-1,cind[2],cind[3]] + 
-                        dataset.cell_data[m][cind[1]-1,cind[2],cind[3]-1]) / 4                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1:2]..., cind[3] - 1] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2], cind[3]] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2], cind[3] - 1]
+                        ) / 4
                 elseif cind[1] == 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 elseif cind[1] != 1 && cind[3] == 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1]-1, cind[2],cind[3]]) / 2                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2], cind[3]]
+                        ) / 2
                 elseif cind[1] == cind[3] == 1
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[1] != 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1:2]...,cind[3]-1] + 
-                        dataset.cell_data[m][:,cind[1]-1,cind[2],cind[3]] + 
-                        dataset.cell_data[m][:,cind[1]-1,cind[2],cind[3]-1]) / 4                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2], cind[3]] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2], cind[3] - 1]
+                        ) / 4
                 elseif cind[1] == 1 && cind[3] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 elseif cind[1] != 1 && cind[3] == 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1]-1, cind[2],cind[3]]) / 2                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2], cind[3]]
+                        ) / 2
                 elseif cind[1] == cind[3] == 1
-                    _cd = dataset.cell_data[m][:,cind...]
+                    _cd = dataset.cell_data[m][:, cind...]
                 end
                 append!(_cell_data[m], _cd)
             end
@@ -435,34 +503,52 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[1] != 1 && cind[2] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1]-1,cind[2:3]...] + 
-                        dataset.cell_data[m][cind[1],cind[2]-1,cind[3]] + 
-                        dataset.cell_data[m][cind[1]-1,cind[2]-1,cind[3]]) / 4                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2:3]...] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2] - 1, cind[3]]
+                        ) / 4
                 elseif cind[1] == 1 && cind[2] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1],cind[2]-1,cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 elseif cind[1] != 1 && cind[2] == 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1]-1,cind[2],cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2], cind[3]]
+                        ) / 2
                 elseif cind[1] == cind[2] == 1
                     _cd = dataset.cell_data[m][cind...]
                 end
                 push!(_cell_data[m], _cd)
             else
                 if cind[1] != 1 && cind[2] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1]-1,cind[2:3]...] + 
-                        dataset.cell_data[m][:,cind[1],cind[2]-1,cind[3]] + 
-                        dataset.cell_data[m][:,cind[1]-1,cind[2]-1,cind[3]]) / 4                            
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2:3]...] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2] - 1, cind[3]]
+                        ) / 4
                 elseif cind[1] == 1 && cind[2] != 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1],cind[2]-1,cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 elseif cind[1] != 1 && cind[2] == 1
-                    _cd = (dataset.cell_data[m][:,cind...] +
-                        dataset.cell_data[m][:,cind[1]-1,cind[2],cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2], cind[3]]
+                        ) / 2
                 elseif cind[1] == cind[2] == 1
-                    _cd = dataset.cell_data[m][:,cind...]
+                    _cd = dataset.cell_data[m][:, cind...]
                 end
                 append!(_cell_data[m], _cd)
             end
@@ -474,18 +560,24 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[3] != 1
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1:2]..., cind[3]-1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1:2]..., cind[3] - 1]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[3] != 1
-                        _cd = (dataset.cell_data[m][:,cind...] +
-                            dataset.cell_data[m][:,cind[1:2]...,cind[3]-1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1]
+                            ) / 2
                     else
-                        _cd = dataset.cell_data[m][:,cind...]
+                        _cd = dataset.cell_data[m][:, cind...]
                     end
                     append!(_cell_data[m], _cd)
                 end
@@ -496,18 +588,24 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[2] != cextents[2]
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1], cind[2]+1, cind[3]]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1], cind[2] + 1, cind[3]]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[2] != cextents[2]
-                        _cd = (dataset.cell_data[m][:,cind...] +
-                            dataset.cell_data[m][:,cind[1],cind[2]+1,cind[3]]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1], cind[2] + 1, cind[3]]
+                            ) / 2
                     else
-                        _cd = dataset.cell_data[m][:,cind...]
+                        _cd = dataset.cell_data[m][:, cind...]
                     end
                     append!(_cell_data[m], _cd)
                 end
@@ -518,18 +616,24 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[3] != cextents[3]
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1:2]..., cind[3]+1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1:2]..., cind[3] + 1]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[3] != cextents[3]
-                        _cd = (dataset.cell_data[m][:,cind...] +
-                            dataset.cell_data[m][:,cind[1:2]...,cind[3]+1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1:2]..., cind[3] + 1]
+                            ) / 2
                     else
-                        _cd = dataset.cell_data[m][:,cind...]
+                        _cd = dataset.cell_data[m][:, cind...]
                     end
                     append!(_cell_data[m], _cd)
                 end
@@ -540,16 +644,22 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[2] != 1
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1], cind[2]-1, cind[3]]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[2] != 1
-                        _cd = (dataset.cell_data[m][:, cind...] +
-                            dataset.cell_data[m][:, cind[1], cind[2]-1, cind[3]]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][:, cind...]
                     end
@@ -563,16 +673,22 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[3] != 1
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1:2]..., cind[3]-1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1:2]..., cind[3] - 1]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[3] != 1
-                        _cd = (dataset.cell_data[m][:, cind...] +
-                            dataset.cell_data[m][:, cind[1:2]..., cind[3]-1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][:, cind...]
                     end
@@ -585,16 +701,22 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[3] != cextents[3]
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1:2]..., cind[3]+1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1:2]..., cind[3] + 1]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[3] != cextents[3]
-                        _cd = (dataset.cell_data[m][:, cind...] +
-                            dataset.cell_data[m][:, cind[1:2]..., cind[3]+1]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1:2]..., cind[3] + 1]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][:, cind...]
                     end
@@ -607,16 +729,22 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[1] != 1
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1]-1, cind[2:3]...]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1] - 1, cind[2:3]...]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[1] != 1
-                        _cd = (dataset.cell_data[m][:, cind...] +
-                            dataset.cell_data[m][:, cind[1]-1, cind[2:3]...]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1] - 1, cind[2:3]...]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][:, cind...]
                     end
@@ -630,16 +758,22 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[1] != 1
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1]-1, cind[2:3]...]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1] - 1, cind[2:3]...]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[1] != 1
-                        _cd = (dataset.cell_data[m][:, cind...] +
-                            dataset.cell_data[m][:, cind[1]-1, cind[2:3]...]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1] - 1, cind[2:3]...]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][:, cind...]
                     end
@@ -652,16 +786,22 @@ function decompose_to_lines_3d_with_cell_data(dataset::VTKStructuredData)
                 _var_dim = var_dim(dataset, m, "Cell")
                 if _var_dim == 1
                     if cind[2] != 1
-                        _cd = (dataset.cell_data[m][cind...] +
-                            dataset.cell_data[m][cind[1], cind[2]-1, cind[3]]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][cind...] +
+                                dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][cind...]
                     end
                     push!(_cell_data[m], _cd)
                 else
                     if cind[2] != 1
-                        _cd = (dataset.cell_data[m][:, cind...] +
-                            dataset.cell_data[m][:, cind[1], cind[2]-1, cind[3]]) / 2
+                        _cd =
+                            (
+                                dataset.cell_data[m][:, cind...] +
+                                dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]]
+                            ) / 2
                     else
                         _cd = dataset.cell_data[m][:, cind...]
                     end

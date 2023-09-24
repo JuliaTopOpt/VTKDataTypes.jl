@@ -50,7 +50,7 @@ function triangulate_2d_with_cell_data(dataset::VTKStructuredData)
         end
     end
 
-    _cell_types = fill(5, 2*_num_of_cells)
+    _cell_types = fill(5, 2 * _num_of_cells)
     for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
         push!(faces, [quad_cc[1], quad_cc[2], quad_cc[3]])
@@ -70,9 +70,9 @@ function triangulate_2d_with_cell_data(dataset::VTKStructuredData)
     for m in keys(dataset.cell_data)
         _var_dim = var_dim(dataset, m, "Cell")
         if _var_dim == 1
-            _cell_data[m] = reshape(_cell_data[m], (2*_num_of_cells,))
+            _cell_data[m] = reshape(_cell_data[m], (2 * _num_of_cells,))
         else
-            _cell_data[m] = reshape(_cell_data[m], (_var_dim, 2*_num_of_cells))
+            _cell_data[m] = reshape(_cell_data[m], (_var_dim, 2 * _num_of_cells))
         end
     end
 
@@ -109,8 +109,11 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
@@ -118,8 +121,11 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
                 push!(_cell_data[m], _cd)
             else
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][:, cind...] +
-                        dataset.cell_data[m][:, cind[1:2]...,cind[3]-1]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1:2]..., cind[3] - 1]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][:, cind...]
                 end
@@ -134,8 +140,11 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[2] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1],cind[2]-1,cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
@@ -143,8 +152,11 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
                 push!(_cell_data[m], _cd)
             else
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][:, cind...] +
-                        dataset.cell_data[m][:, cind[1],cind[2]-1,cind[3]]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1], cind[2] - 1, cind[3]]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][:, cind...]
                 end
@@ -159,8 +171,11 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
             _var_dim = var_dim(dataset, m, "Cell")
             if _var_dim == 1
                 if cind[1] != 1
-                    _cd = (dataset.cell_data[m][cind...] +
-                        dataset.cell_data[m][cind[1]-1,cind[2:3]...]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][cind...] +
+                            dataset.cell_data[m][cind[1] - 1, cind[2:3]...]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][cind...]
                 end
@@ -168,8 +183,11 @@ function triangulate_3d_with_cell_data(dataset::VTKStructuredData)
                 push!(_cell_data[m], _cd)
             else
                 if cind[3] != 1
-                    _cd = (dataset.cell_data[m][:, cind...] +
-                        dataset.cell_data[m][:, cind[1]-1,cind[2:3]...]) / 2
+                    _cd =
+                        (
+                            dataset.cell_data[m][:, cind...] +
+                            dataset.cell_data[m][:, cind[1] - 1, cind[2:3]...]
+                        ) / 2
                 else
                     _cd = dataset.cell_data[m][:, cind...]
                 end
@@ -261,7 +279,7 @@ function triangulate_2d_no_cell_data(dataset::VTKStructuredData)
     _cell_data = empty(dataset.cell_data)
     faces = Vector{Int}[]
 
-    _cell_types = fill(5, 2*_num_of_cells)
+    _cell_types = fill(5, 2 * _num_of_cells)
     for cind in Iterators.product(1:cextents[1], 1:cextents[2])
         quad_cc = cell_connectivity(dataset, cind)
         push!(faces, [quad_cc[1], quad_cc[2], quad_cc[3]])

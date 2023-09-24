@@ -5,6 +5,7 @@ include("triangulate_struct.jl")
 triangulate(dataset::AbstractVTKMultiblockData) = triangulate(VTKUnstructuredData(dataset))
 
 function triangulate(dataset::AbstractTimeSeriesVTKData)
-    return VTKTimeSeriesData(dataset.timemarkers, [triangulate(dataset[i]) for 
-        i in 1:length(dataset)])
+    return VTKTimeSeriesData(
+        dataset.timemarkers, [triangulate(dataset[i]) for i in 1:length(dataset)]
+    )
 end

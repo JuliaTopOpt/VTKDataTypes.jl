@@ -45,24 +45,34 @@ function decompose_triangle(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[[cell_connectivity...]], Int[5]
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ], 
-            [ cell_connectivity[2], cell_connectivity[3] ], 
-            [ cell_connectivity[3], cell_connectivity[1] ] ],
-            fill(3,3)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[3]],
+            [cell_connectivity[3], cell_connectivity[1]],
+        ],
+        fill(3, 3)
     end
 end
 
 function decompose_triangle_strip(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[i], cell_connectivity[i+1], cell_connectivity[i+2] ] 
-            for i in 1:length(cell_connectivity)-2], fill(5, length(cell_connectivity)-2)
+        return Vector{Int}[
+            [cell_connectivity[i], cell_connectivity[i + 1], cell_connectivity[i + 2]] for
+            i in 1:(length(cell_connectivity) - 2)
+        ],
+        fill(5, length(cell_connectivity) - 2)
     else
         return append!(
-            Vector{Int}[ [ cell_connectivity[i], cell_connectivity[i+1] ]
-                for i in 1:length(cell_connectivity)-1 ], 
-            Vector{Int}[ [ cell_connectivity[i], cell_connectivity[i+2] ]
-                for i in 1:length(cell_connectivity)-2]), 
-            fill(3, 2*length(cell_connectivity)-3)
+            Vector{Int}[
+                [cell_connectivity[i], cell_connectivity[i + 1]] for
+                i in 1:(length(cell_connectivity) - 1)
+            ],
+            Vector{Int}[
+                [cell_connectivity[i], cell_connectivity[i + 2]] for
+                i in 1:(length(cell_connectivity) - 2)
+            ],
+        ),
+        fill(3, 2 * length(cell_connectivity) - 3)
     end
 end
 
@@ -70,11 +80,13 @@ function decompose_pixel(cell_connectivity, target::String)
     if target == "Faces"
         return [cell_connectivity], [8]
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ],
-            [ cell_connectivity[2], cell_connectivity[4] ],
-            [ cell_connectivity[4], cell_connectivity[3] ], 
-            [ cell_connectivity[3], cell_connectivity[1] ] ], 
-            fill(3, 4)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[4]],
+            [cell_connectivity[4], cell_connectivity[3]],
+            [cell_connectivity[3], cell_connectivity[1]],
+        ],
+        fill(3, 4)
     end
 end
 
@@ -82,124 +94,226 @@ function decompose_quad(cell_connectivity, target::String)
     if target == "Faces"
         return [cell_connectivity], [9]
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ], 
-            [ cell_connectivity[2], cell_connectivity[3] ],
-            [ cell_connectivity[3], cell_connectivity[4] ],
-            [ cell_connectivity[4], cell_connectivity[1] ] ],
-            fill(3, 4)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[3]],
+            [cell_connectivity[3], cell_connectivity[4]],
+            [cell_connectivity[4], cell_connectivity[1]],
+        ],
+        fill(3, 4)
     end
 end
 
 function decompose_tetra(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3] ], 
-            [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[4] ], 
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[4] ],
-            [ cell_connectivity[2], cell_connectivity[1], cell_connectivity[4] ] ], 
-            fill(5, 4)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[3]],
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[4]],
+            [cell_connectivity[2], cell_connectivity[3], cell_connectivity[4]],
+            [cell_connectivity[2], cell_connectivity[1], cell_connectivity[4]],
+        ],
+        fill(5, 4)
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ],
-            [ cell_connectivity[2], cell_connectivity[3] ],
-            [ cell_connectivity[3], cell_connectivity[1] ],
-            [ cell_connectivity[1], cell_connectivity[4] ], 
-            [ cell_connectivity[2], cell_connectivity[4] ], 
-            [ cell_connectivity[3], cell_connectivity[4] ] ], 
-            fill(3, 6)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[3]],
+            [cell_connectivity[3], cell_connectivity[1]],
+            [cell_connectivity[1], cell_connectivity[4]],
+            [cell_connectivity[2], cell_connectivity[4]],
+            [cell_connectivity[3], cell_connectivity[4]],
+        ],
+        fill(3, 6)
     end
 end
 
 function decompose_voxel(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[4], cell_connectivity[3] ], 
-            [ cell_connectivity[5], cell_connectivity[6], cell_connectivity[8], cell_connectivity[7] ],
-            [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[6], cell_connectivity[5] ], 
-            [ cell_connectivity[2], cell_connectivity[4], cell_connectivity[8], cell_connectivity[6] ],
-            [ cell_connectivity[4], cell_connectivity[3], cell_connectivity[7], cell_connectivity[8] ],
-            [ cell_connectivity[3], cell_connectivity[1], cell_connectivity[5], cell_connectivity[7] ] ],
-            fill(9, 6)
+        return Vector{Int}[
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[4],
+                cell_connectivity[3],
+            ],
+            [
+                cell_connectivity[5],
+                cell_connectivity[6],
+                cell_connectivity[8],
+                cell_connectivity[7],
+            ],
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[6],
+                cell_connectivity[5],
+            ],
+            [
+                cell_connectivity[2],
+                cell_connectivity[4],
+                cell_connectivity[8],
+                cell_connectivity[6],
+            ],
+            [
+                cell_connectivity[4],
+                cell_connectivity[3],
+                cell_connectivity[7],
+                cell_connectivity[8],
+            ],
+            [
+                cell_connectivity[3],
+                cell_connectivity[1],
+                cell_connectivity[5],
+                cell_connectivity[7],
+            ],
+        ],
+        fill(9, 6)
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ],
-            [ cell_connectivity[2], cell_connectivity[4] ],
-            [ cell_connectivity[4], cell_connectivity[3] ], 
-            [ cell_connectivity[3], cell_connectivity[1] ],
-            [ cell_connectivity[5], cell_connectivity[6] ],
-            [ cell_connectivity[6], cell_connectivity[8] ],
-            [ cell_connectivity[8], cell_connectivity[7] ],
-            [ cell_connectivity[7], cell_connectivity[5] ],
-            [ cell_connectivity[1], cell_connectivity[5] ],
-            [ cell_connectivity[2], cell_connectivity[6] ],
-            [ cell_connectivity[4], cell_connectivity[8] ],
-            [ cell_connectivity[3], cell_connectivity[7] ] ],
-            fill(3, 12)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[4]],
+            [cell_connectivity[4], cell_connectivity[3]],
+            [cell_connectivity[3], cell_connectivity[1]],
+            [cell_connectivity[5], cell_connectivity[6]],
+            [cell_connectivity[6], cell_connectivity[8]],
+            [cell_connectivity[8], cell_connectivity[7]],
+            [cell_connectivity[7], cell_connectivity[5]],
+            [cell_connectivity[1], cell_connectivity[5]],
+            [cell_connectivity[2], cell_connectivity[6]],
+            [cell_connectivity[4], cell_connectivity[8]],
+            [cell_connectivity[3], cell_connectivity[7]],
+        ],
+        fill(3, 12)
     end
 end
 
 function decompose_hexa(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[4] ], 
-            [ cell_connectivity[5], cell_connectivity[6], cell_connectivity[7], cell_connectivity[8] ],
-            [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[6], cell_connectivity[5] ], 
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[7], cell_connectivity[6] ],
-            [ cell_connectivity[3], cell_connectivity[4], cell_connectivity[8], cell_connectivity[7] ],
-            [ cell_connectivity[4], cell_connectivity[1], cell_connectivity[5], cell_connectivity[8] ] ],
-            fill(9, 6)
+        return Vector{Int}[
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[3],
+                cell_connectivity[4],
+            ],
+            [
+                cell_connectivity[5],
+                cell_connectivity[6],
+                cell_connectivity[7],
+                cell_connectivity[8],
+            ],
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[6],
+                cell_connectivity[5],
+            ],
+            [
+                cell_connectivity[2],
+                cell_connectivity[3],
+                cell_connectivity[7],
+                cell_connectivity[6],
+            ],
+            [
+                cell_connectivity[3],
+                cell_connectivity[4],
+                cell_connectivity[8],
+                cell_connectivity[7],
+            ],
+            [
+                cell_connectivity[4],
+                cell_connectivity[1],
+                cell_connectivity[5],
+                cell_connectivity[8],
+            ],
+        ],
+        fill(9, 6)
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ],
-            [ cell_connectivity[2], cell_connectivity[3] ],
-            [ cell_connectivity[3], cell_connectivity[4] ], 
-            [ cell_connectivity[4], cell_connectivity[1] ],
-            [ cell_connectivity[5], cell_connectivity[6] ],
-            [ cell_connectivity[6], cell_connectivity[7] ],
-            [ cell_connectivity[7], cell_connectivity[8] ],
-            [ cell_connectivity[8], cell_connectivity[5] ],
-            [ cell_connectivity[1], cell_connectivity[5] ],
-            [ cell_connectivity[2], cell_connectivity[6] ],
-            [ cell_connectivity[3], cell_connectivity[7] ],
-            [ cell_connectivity[4], cell_connectivity[8] ] ], 
-            fill(3, 12)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[3]],
+            [cell_connectivity[3], cell_connectivity[4]],
+            [cell_connectivity[4], cell_connectivity[1]],
+            [cell_connectivity[5], cell_connectivity[6]],
+            [cell_connectivity[6], cell_connectivity[7]],
+            [cell_connectivity[7], cell_connectivity[8]],
+            [cell_connectivity[8], cell_connectivity[5]],
+            [cell_connectivity[1], cell_connectivity[5]],
+            [cell_connectivity[2], cell_connectivity[6]],
+            [cell_connectivity[3], cell_connectivity[7]],
+            [cell_connectivity[4], cell_connectivity[8]],
+        ],
+        fill(3, 12)
     end
 end
 
 function decompose_wedge(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[5], cell_connectivity[4] ], 
-            [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3] ], 
-            [ cell_connectivity[2], cell_connectivity[5], cell_connectivity[6], cell_connectivity[3] ],
-            [ cell_connectivity[5], cell_connectivity[4], cell_connectivity[6] ],
-            [ cell_connectivity[4], cell_connectivity[1], cell_connectivity[3], cell_connectivity[6] ] ], 
-            [9, 5, 9, 5, 9]
+        return Vector{Int}[
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[5],
+                cell_connectivity[4],
+            ],
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[3]],
+            [
+                cell_connectivity[2],
+                cell_connectivity[5],
+                cell_connectivity[6],
+                cell_connectivity[3],
+            ],
+            [cell_connectivity[5], cell_connectivity[4], cell_connectivity[6]],
+            [
+                cell_connectivity[4],
+                cell_connectivity[1],
+                cell_connectivity[3],
+                cell_connectivity[6],
+            ],
+        ],
+        [9, 5, 9, 5, 9]
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ],
-            [ cell_connectivity[2], cell_connectivity[5] ],
-            [ cell_connectivity[5], cell_connectivity[4] ], 
-            [ cell_connectivity[4], cell_connectivity[1] ],
-            [ cell_connectivity[1], cell_connectivity[3] ],
-            [ cell_connectivity[2], cell_connectivity[3] ],
-            [ cell_connectivity[5], cell_connectivity[6] ],
-            [ cell_connectivity[4], cell_connectivity[6] ],
-            [ cell_connectivity[3], cell_connectivity[6] ] ], 
-            fill(3, 9)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[5]],
+            [cell_connectivity[5], cell_connectivity[4]],
+            [cell_connectivity[4], cell_connectivity[1]],
+            [cell_connectivity[1], cell_connectivity[3]],
+            [cell_connectivity[2], cell_connectivity[3]],
+            [cell_connectivity[5], cell_connectivity[6]],
+            [cell_connectivity[4], cell_connectivity[6]],
+            [cell_connectivity[3], cell_connectivity[6]],
+        ],
+        fill(3, 9)
     end
 end
 
 function decompose_pyramid(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[4] ], 
-            [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[5] ], 
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[5] ], 
-            [ cell_connectivity[3], cell_connectivity[4], cell_connectivity[5] ], 
-            [ cell_connectivity[4], cell_connectivity[1], cell_connectivity[5] ] ], 
-            Int[9, 5, 5, 5, 5]
+        return Vector{Int}[
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[3],
+                cell_connectivity[4],
+            ],
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[5]],
+            [cell_connectivity[2], cell_connectivity[3], cell_connectivity[5]],
+            [cell_connectivity[3], cell_connectivity[4], cell_connectivity[5]],
+            [cell_connectivity[4], cell_connectivity[1], cell_connectivity[5]],
+        ],
+        Int[9, 5, 5, 5, 5]
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2] ],
-            [ cell_connectivity[2], cell_connectivity[3] ],
-            [ cell_connectivity[3], cell_connectivity[4] ], 
-            [ cell_connectivity[4], cell_connectivity[1] ],
-            [ cell_connectivity[1], cell_connectivity[5] ],
-            [ cell_connectivity[2], cell_connectivity[5] ],
-            [ cell_connectivity[3], cell_connectivity[5] ],
-            [ cell_connectivity[4], cell_connectivity[5] ] ], 
-            fill(3, 8)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2]],
+            [cell_connectivity[2], cell_connectivity[3]],
+            [cell_connectivity[3], cell_connectivity[4]],
+            [cell_connectivity[4], cell_connectivity[1]],
+            [cell_connectivity[1], cell_connectivity[5]],
+            [cell_connectivity[2], cell_connectivity[5]],
+            [cell_connectivity[3], cell_connectivity[5]],
+            [cell_connectivity[4], cell_connectivity[5]],
+        ],
+        fill(3, 8)
     end
 end
 
@@ -207,10 +321,12 @@ function decompose_quadratic_triangle(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[cell_connectivity], Int[22]
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[4]], 
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[5] ], 
-            [ cell_connectivity[3], cell_connectivity[1], cell_connectivity[6] ] ], 
-            fill(21, 3)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[4]],
+            [cell_connectivity[2], cell_connectivity[3], cell_connectivity[5]],
+            [cell_connectivity[3], cell_connectivity[1], cell_connectivity[6]],
+        ],
+        fill(21, 3)
     end
 end
 
@@ -218,58 +334,156 @@ function decompose_quadratic_quad(cell_connectivity, target::String)
     if target == "Faces"
         return Vector{Int}[cell_connectivity], Int[23]
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[5] ], 
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[6] ],
-            [ cell_connectivity[3], cell_connectivity[4], cell_connectivity[7] ],
-            [ cell_connectivity[4], cell_connectivity[1], cell_connectivity[8] ] ],
-            fill(21, 4)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[5]],
+            [cell_connectivity[2], cell_connectivity[3], cell_connectivity[6]],
+            [cell_connectivity[3], cell_connectivity[4], cell_connectivity[7]],
+            [cell_connectivity[4], cell_connectivity[1], cell_connectivity[8]],
+        ],
+        fill(21, 4)
     end
 end
 
 function decompose_quadratic_tetra(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[5], cell_connectivity[6], cell_connectivity[7] ], 
-            [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[4], cell_connectivity[5], cell_connectivity[9], cell_connectivity[8] ], 
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[4], cell_connectivity[6], cell_connectivity[10], cell_connectivity[9] ],
-            [ cell_connectivity[3], cell_connectivity[1], cell_connectivity[4], cell_connectivity[7], cell_connectivity[8], cell_connectivity[10] ] ], 
-            fill(22, 4)
+        return Vector{Int}[
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[3],
+                cell_connectivity[5],
+                cell_connectivity[6],
+                cell_connectivity[7],
+            ],
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[4],
+                cell_connectivity[5],
+                cell_connectivity[9],
+                cell_connectivity[8],
+            ],
+            [
+                cell_connectivity[2],
+                cell_connectivity[3],
+                cell_connectivity[4],
+                cell_connectivity[6],
+                cell_connectivity[10],
+                cell_connectivity[9],
+            ],
+            [
+                cell_connectivity[3],
+                cell_connectivity[1],
+                cell_connectivity[4],
+                cell_connectivity[7],
+                cell_connectivity[8],
+                cell_connectivity[10],
+            ],
+        ],
+        fill(22, 4)
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[5] ],
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[5] ],
-            [ cell_connectivity[3], cell_connectivity[1], cell_connectivity[7] ],
-            [ cell_connectivity[1], cell_connectivity[4], cell_connectivity[8] ], 
-            [ cell_connectivity[2], cell_connectivity[4], cell_connectivity[8] ], 
-            [ cell_connectivity[3], cell_connectivity[4], cell_connectivity[10] ] ], 
-            fill(21, 6)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[5]],
+            [cell_connectivity[2], cell_connectivity[3], cell_connectivity[5]],
+            [cell_connectivity[3], cell_connectivity[1], cell_connectivity[7]],
+            [cell_connectivity[1], cell_connectivity[4], cell_connectivity[8]],
+            [cell_connectivity[2], cell_connectivity[4], cell_connectivity[8]],
+            [cell_connectivity[3], cell_connectivity[4], cell_connectivity[10]],
+        ],
+        fill(21, 6)
     end
 end
 
 function decompose_quadratic_hexa(cell_connectivity, target::String)
     if target == "Faces"
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[3], cell_connectivity[4], cell_connectivity[9], cell_connectivity[10], cell_connectivity[11], cell_connectivity[12] ],
-            [ cell_connectivity[5], cell_connectivity[6], cell_connectivity[7], cell_connectivity[8], cell_connectivity[13], cell_connectivity[14], cell_connectivity[15], cell_connectivity[16] ], 
-            [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[6], cell_connectivity[5], cell_connectivity[9], cell_connectivity[18], cell_connectivity[13], cell_connectivity[17] ], 
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[7], cell_connectivity[6], cell_connectivity[10], cell_connectivity[19], cell_connectivity[14], cell_connectivity[18] ],
-            [ cell_connectivity[3], cell_connectivity[4], cell_connectivity[8], cell_connectivity[7], cell_connectivity[11], cell_connectivity[20], cell_connectivity[15], cell_connectivity[19] ],
-            [ cell_connectivity[4], cell_connectivity[1], cell_connectivity[5], cell_connectivity[8], cell_connectivity[12], cell_connectivity[17], cell_connectivity[16], cell_connectivity[20] ] ],
-            fill(23, 6)
+        return Vector{Int}[
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[3],
+                cell_connectivity[4],
+                cell_connectivity[9],
+                cell_connectivity[10],
+                cell_connectivity[11],
+                cell_connectivity[12],
+            ],
+            [
+                cell_connectivity[5],
+                cell_connectivity[6],
+                cell_connectivity[7],
+                cell_connectivity[8],
+                cell_connectivity[13],
+                cell_connectivity[14],
+                cell_connectivity[15],
+                cell_connectivity[16],
+            ],
+            [
+                cell_connectivity[1],
+                cell_connectivity[2],
+                cell_connectivity[6],
+                cell_connectivity[5],
+                cell_connectivity[9],
+                cell_connectivity[18],
+                cell_connectivity[13],
+                cell_connectivity[17],
+            ],
+            [
+                cell_connectivity[2],
+                cell_connectivity[3],
+                cell_connectivity[7],
+                cell_connectivity[6],
+                cell_connectivity[10],
+                cell_connectivity[19],
+                cell_connectivity[14],
+                cell_connectivity[18],
+            ],
+            [
+                cell_connectivity[3],
+                cell_connectivity[4],
+                cell_connectivity[8],
+                cell_connectivity[7],
+                cell_connectivity[11],
+                cell_connectivity[20],
+                cell_connectivity[15],
+                cell_connectivity[19],
+            ],
+            [
+                cell_connectivity[4],
+                cell_connectivity[1],
+                cell_connectivity[5],
+                cell_connectivity[8],
+                cell_connectivity[12],
+                cell_connectivity[17],
+                cell_connectivity[16],
+                cell_connectivity[20],
+            ],
+        ],
+        fill(23, 6)
     else
-        return Vector{Int}[ [ cell_connectivity[1], cell_connectivity[2], cell_connectivity[9] ],
-            [ cell_connectivity[2], cell_connectivity[3], cell_connectivity[10] ],
-            [ cell_connectivity[3], cell_connectivity[4], cell_connectivity[11] ], 
-            [ cell_connectivity[4], cell_connectivity[1], cell_connectivity[12] ],
-            [ cell_connectivity[5], cell_connectivity[6], cell_connectivity[13] ],
-            [ cell_connectivity[6], cell_connectivity[7], cell_connectivity[14] ],
-            [ cell_connectivity[7], cell_connectivity[8], cell_connectivity[15] ],
-            [ cell_connectivity[8], cell_connectivity[5], cell_connectivity[16] ], 
-            [ cell_connectivity[1], cell_connectivity[5], cell_connectivity[17] ],
-            [ cell_connectivity[2], cell_connectivity[6], cell_connectivity[18] ],
-            [ cell_connectivity[3], cell_connectivity[7], cell_connectivity[19] ],
-            [ cell_connectivity[4], cell_connectivity[8], cell_connectivity[20] ] ],
-            fill(21, 12)
+        return Vector{Int}[
+            [cell_connectivity[1], cell_connectivity[2], cell_connectivity[9]],
+            [cell_connectivity[2], cell_connectivity[3], cell_connectivity[10]],
+            [cell_connectivity[3], cell_connectivity[4], cell_connectivity[11]],
+            [cell_connectivity[4], cell_connectivity[1], cell_connectivity[12]],
+            [cell_connectivity[5], cell_connectivity[6], cell_connectivity[13]],
+            [cell_connectivity[6], cell_connectivity[7], cell_connectivity[14]],
+            [cell_connectivity[7], cell_connectivity[8], cell_connectivity[15]],
+            [cell_connectivity[8], cell_connectivity[5], cell_connectivity[16]],
+            [cell_connectivity[1], cell_connectivity[5], cell_connectivity[17]],
+            [cell_connectivity[2], cell_connectivity[6], cell_connectivity[18]],
+            [cell_connectivity[3], cell_connectivity[7], cell_connectivity[19]],
+            [cell_connectivity[4], cell_connectivity[8], cell_connectivity[20]],
+        ],
+        fill(21, 12)
     end
 end
 
-function decompose_cell(dataset::AbstractStaticVTKData, cell_ind::Union{Int, Tuple{Int, Vararg{Int}}}; target::String="")
-    decompose_cell(cell_connectivity(dataset, cell_ind), cell_type(dataset, cell_ind))
+function decompose_cell(
+    dataset::AbstractStaticVTKData,
+    cell_ind::Union{Int,Tuple{Int,Vararg{Int}}};
+    target::String="",
+)
+    return decompose_cell(
+        cell_connectivity(dataset, cell_ind), cell_type(dataset, cell_ind)
+    )
 end

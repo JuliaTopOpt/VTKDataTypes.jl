@@ -1,9 +1,14 @@
-VTKMultiblockData(dataset::AbstractVTKSimpleData) = VTKMultiblockData(AbstractStaticVTKData[dataset])
+function VTKMultiblockData(dataset::AbstractVTKSimpleData)
+    return VTKMultiblockData(AbstractStaticVTKData[dataset])
+end
 
 function VTKRectilinearData(dataset::VTKUniformRectilinearData)
     _extents = extents(dataset)
     _dim = dim(dataset)
-    point_coords = ntuple(j -> [dataset.origin[j] + (i-1)*dataset.spacing[j] for i in 1:_extents[j]], Val(_dim))
+    point_coords = ntuple(
+        j -> [dataset.origin[j] + (i - 1) * dataset.spacing[j] for i in 1:_extents[j]],
+        Val(_dim),
+    )
     return VTKRectilinearData(point_coords, dataset.point_data, dataset.cell_data)
 end
 function Base.convert(::Type{VTKRectilinearData}, dataset::VTKUniformRectilinearData)
@@ -28,7 +33,10 @@ function VTKStructuredData(dataset::VTKRectilinearData)
         zcoord = dataset.point_coords[3]
 
         point_coords = zeros(dim(dataset), extents(dataset)...)
-        for k in 1:extents(dataset, 3), j in 1:extents(dataset, 2), i in 1:extents(dataset, 1)
+        for k in 1:extents(dataset, 3),
+            j in 1:extents(dataset, 2),
+            i in 1:extents(dataset, 1)
+
             point_coords[:, i, j, k] = [xcoord[i], ycoord[j], zcoord[k]]
         end
     else
@@ -44,8 +52,13 @@ function Base.convert(::Type{VTKStructuredData}, dataset::VTKRectilinearData)
 end
 
 function VTKUnstructuredData(dataset::VTKPolyData)
-    return VTKUnstructuredData(dataset.point_coords, dataset.cell_types, 
-        dataset.cell_connectivity, dataset.point_data, dataset.cell_data)
+    return VTKUnstructuredData(
+        dataset.point_coords,
+        dataset.cell_types,
+        dataset.cell_connectivity,
+        dataset.point_data,
+        dataset.cell_data,
+    )
 end
 
 function VTKUnstructuredData(dataset::T) where {T<:AbstractVTKStructuredData}
@@ -58,8 +71,12 @@ function VTKUnstructuredData(dataset::T) where {T<:AbstractVTKStructuredData}
         point_coords = unstructured_point_coords_from_uniform_rectilinear(dataset)
     end
     point_data = unstructured_point_data_from_structured(dataset)
-    cell_types, _cell_connectivity, cell_data = unstructured_cell_info_from_structured(dataset)
-    return VTKUnstructuredData(point_coords, cell_types, _cell_connectivity, point_data, cell_data)
+    cell_types, _cell_connectivity, cell_data = unstructured_cell_info_from_structured(
+        dataset
+    )
+    return VTKUnstructuredData(
+        point_coords, cell_types, _cell_connectivity, point_data, cell_data
+    )
 end
 
 function VTKUnstructuredData(data_blocks::VTKMultiblockData)
@@ -97,10 +114,12 @@ function unstructured_point_data_from_structured(dataset::AbstractVTKStructuredD
             point_data[m] = reshape(dataset.point_data[m], (_var_dim, _num_of_points))
         end
     end
-    point_data
+    return point_data
 end
 
-function unstructured_cell_info_from_structured(dataset::T) where {T<:AbstractVTKStructuredData}
+function unstructured_cell_info_from_structured(
+    dataset::T
+) where {T<:AbstractVTKStructuredData}
     _num_of_cells = num_of_cells(dataset)
     _dim = dim(dataset)
     pextents = extents(dataset)
@@ -113,14 +132,25 @@ function unstructured_cell_info_from_structured(dataset::T) where {T<:AbstractVT
         else
             cell_types = fill(9, _num_of_cells) #VTK_QUAD
         end
-        _cell_connectivity = reshape(map(local_cell_connectivity, ((i,j) for j in 1:cextents[2], i in 1:cextents[1])), (_num_of_cells,))
+        _cell_connectivity = reshape(
+            map(
+                local_cell_connectivity, ((i, j) for j in 1:cextents[2], i in 1:cextents[1])
+            ),
+            (_num_of_cells,),
+        )
     elseif _dim == 3
         if T <: VTKUniformRectilinearData
             cell_types = fill(11, _num_of_cells) #VTK_VOXEL
         else
             cell_types = fill(12, _num_of_cells) #VTK_HEXAHEDRON
         end
-        _cell_connectivity = reshape(map(local_cell_connectivity, ((i,j,k) for k in 1:cextents[3], j in 1:cextents[2], i in 1:cextents[1])), (_num_of_cells,))
+        _cell_connectivity = reshape(
+            map(
+                local_cell_connectivity,
+                ((i, j, k) for k in 1:cextents[3], j in 1:cextents[2], i in 1:cextents[1]),
+            ),
+            (_num_of_cells,),
+        )
     end
 
     cell_data = empty(dataset.cell_data)
@@ -151,15 +181,18 @@ function unstructured_point_coords_from_rectilinear(dataset::VTKRectilinearData)
     p = 1
     if _dim == 2
         for y in dataset.point_coords[2], x in dataset.point_coords[1]
-            _point_coords[1,p] = x
-            _point_coords[2,p] = y
+            _point_coords[1, p] = x
+            _point_coords[2, p] = y
             p += 1
         end
     elseif _dim == 3
-        for z in dataset.point_coords[3], y in dataset.point_coords[2], x in dataset.point_coords[1]
-            _point_coords[1,p] = x
-            _point_coords[2,p] = y
-            _point_coords[3,p] = z
+        for z in dataset.point_coords[3],
+            y in dataset.point_coords[2],
+            x in dataset.point_coords[1]
+
+            _point_coords[1, p] = x
+            _point_coords[2, p] = y
+            _point_coords[3, p] = z
             p += 1
         end
     else
@@ -168,7 +201,9 @@ function unstructured_point_coords_from_rectilinear(dataset::VTKRectilinearData)
     return _point_coords
 end
 
-function unstructured_point_coords_from_uniform_rectilinear(dataset::VTKUniformRectilinearData)
+function unstructured_point_coords_from_uniform_rectilinear(
+    dataset::VTKUniformRectilinearData
+)
     _extents = extents(dataset)
     _num_of_points = num_of_points(dataset)
     _dim = dim(dataset)
@@ -182,8 +217,8 @@ function unstructured_point_coords_from_uniform_rectilinear(dataset::VTKUniformR
         for j in 1:_extents[2]
             x = _origin[1]
             for i in 1:_extents[1]
-                _point_coords[1,p] = x
-                _point_coords[2,p] = y
+                _point_coords[1, p] = x
+                _point_coords[2, p] = y
                 p += 1
                 x += _spacing[1]
             end
@@ -196,9 +231,9 @@ function unstructured_point_coords_from_uniform_rectilinear(dataset::VTKUniformR
             for j in 1:_extents[2]
                 x = _origin[1]
                 for i in 1:_extents[1]
-                    _point_coords[1,p] = x
-                    _point_coords[2,p] = y
-                    _point_coords[3,p] = z
+                    _point_coords[1, p] = x
+                    _point_coords[2, p] = y
+                    _point_coords[3, p] = z
                     p += 1
                     x += _spacing[1]
                 end
